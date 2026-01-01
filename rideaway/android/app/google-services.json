@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "899880472170",
+    "project_id": "rideaway-40834",
+    "storage_bucket": "rideaway-40834.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:899880472170:android:430a820658ed266264c413",
+        "android_client_info": {
+          "package_name": "com.example.rideaway"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCsrjkYor93tZ63iZl2kKaUdcft5cydnc0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
