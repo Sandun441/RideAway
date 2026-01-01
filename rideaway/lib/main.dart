@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_core/firebase_core.dart'; // Add this import
+import 'firebase_options.dart'; // Add this import (auto-generated)
+
 import 'core/theme/app_theme.dart';
 import 'routes/app_routes.dart';
 
@@ -13,7 +16,16 @@ import 'screens/settings/settings_screen.dart';
 import 'screens/history/ride_history_screen.dart';
 import 'screens/profile/profile_screen.dart';
 
-void main() {
+// Change main to async to support initialization
+void main() async {
+  // Ensure the framework is fully initialized
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // Initialize Firebase with the correct platform options
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
+
   runApp(const SmartRideApp());
 }
 
@@ -37,12 +49,6 @@ class SmartRideApp extends StatelessWidget {
         AppRoutes.settings: (_) => const SettingsScreen(),
         AppRoutes.profile: (_) => const ProfileScreen(),
         AppRoutes.history: (_) => const RideHistoryScreen(),
-
-
-
-
-
-
       },
     );
   }
