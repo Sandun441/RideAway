@@ -1,47 +1,49 @@
 import 'package:flutter/material.dart';
-import 'package:sensors_plus/sensors_plus.dart';
+import 'core/theme/app_theme.dart';
+import 'routes/app_routes.dart';
 
-void main() => runApp(const BikeSafeApp());
+import 'screens/splash/splash_screen.dart';
+import 'screens/onboarding/onboarding_screen.dart';
+import 'screens/auth/login_screen.dart';
+import 'screens/home/home_screen.dart';
+import 'screens/accident/accident_detected_screen.dart';
+import 'screens/accident/alert_sent_screen.dart';
+import 'screens/contacts/contacts_screen.dart';
+import 'screens/settings/settings_screen.dart';
+import 'screens/history/ride_history_screen.dart';
+import 'screens/profile/profile_screen.dart';
 
-class BikeSafeApp extends StatelessWidget {
-  const BikeSafeApp({super.key});
+void main() {
+  runApp(const SmartRideApp());
+}
+
+class SmartRideApp extends StatelessWidget {
+  const SmartRideApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      home: Scaffold(
-        appBar: AppBar(title: const Text('Bike Accident Detector')),
-        body: const SensorMonitor(),
-      ),
-    );
-  }
-}
+      debugShowCheckedModeBanner: false,
+      theme: AppTheme.lightTheme,
+      initialRoute: AppRoutes.splash,
+      routes: {
+        AppRoutes.splash: (_) => const SplashScreen(),
+        AppRoutes.onboarding: (_) => const OnboardingScreen(),
+        AppRoutes.login: (_) => const LoginScreen(),
+        AppRoutes.home: (_) => const HomeScreen(),
+        AppRoutes.accident: (_) => const AccidentDetectedScreen(),
+        AppRoutes.alertSent: (_) => const AlertSentScreen(),
+        AppRoutes.contacts: (_) => const ContactsScreen(),
+        AppRoutes.settings: (_) => const SettingsScreen(),
+        AppRoutes.profile: (_) => const ProfileScreen(),
+        AppRoutes.history: (_) => const RideHistoryScreen(),
 
-class SensorMonitor extends StatefulWidget {
-  const SensorMonitor({super.key});
 
-  @override
-  State<SensorMonitor> createState() => _SensorMonitorState();
-}
 
-class _SensorMonitorState extends State<SensorMonitor> {
-  double _accelX = 0;
 
-  @override
-  void initState() {
-    super.initState();
-    // Start listening to the accelerometer
-    userAccelerometerEvents.listen((UserAccelerometerEvent event) {
-      setState(() {
-        _accelX = event.x;
-      });
-    });
-  }
 
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Text('Accelerometer X-axis: ${_accelX.toStringAsFixed(2)}'),
+
+      },
     );
   }
 }
