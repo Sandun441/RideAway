@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../routes/app_routes.dart';
-import '../../services/auth_service.dart'; // Ensure this import exists
+import '../../services/auth_service.dart';
+import '../../services/db_service.dart'; // Make sure this is imported
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -10,40 +11,35 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  // 1. Controllers to capture user input
+  // 1. Controllers
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
 
-  // 2. State variable for loading spinner
+  // 2. Loading State
   bool _isLoading = false;
 
-  // 3. Logic to handle Login
+  // 3. Email/Password Login Logic
   void _handleLogin() async {
-    // Hide keyboard
-    FocusScope.of(context).unfocus();
+    FocusScope.of(context).unfocus(); // Hide keyboard
 
-    setState(() => _isLoading = true); // Start loading
+    setState(() => _isLoading = true);
 
-    // Call the AuthService
     final user = await AuthService().login(
       _emailController.text.trim(),
       _passwordController.text.trim(),
     );
 
-    setState(() => _isLoading = false); // Stop loading
+    setState(() => _isLoading = false);
 
     if (user != null) {
-      // Success! Navigate to Home
       if (mounted) {
         Navigator.pushReplacementNamed(context, AppRoutes.home);
       }
     } else {
-      // Failure! Show error snackbar
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content:
-                Text("Login Failed. Please check your email and password."),
+            content: Text("Login Failed. Check email & password."),
             backgroundColor: Colors.red,
           ),
         );
@@ -51,9 +47,31 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
+  // 4. Google Sign-In Logic (NEW)
+  void _handleGoogleLogin() async {
+    setState(() => _isLoading = true);
+
+    final user = await AuthService().signInWithGoogle();
+
+    if (user != null) {
+      // Save user to database (in case they are new)
+      await DatabaseService().saveUser(
+        user.uid,
+        user.displayName ?? "Unknown User",
+        user.email ?? "No Email",
+      );
+
+      if (mounted) {
+        Navigator.pushReplacementNamed(context, AppRoutes.home);
+      }
+    } else {
+      // User canceled or failed
+      setState(() => _isLoading = false);
+    }
+  }
+
   @override
   void dispose() {
-    // Clean up controllers when screen is removed
     _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
@@ -133,7 +151,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     const Text("Email"),
                     const SizedBox(height: 6),
                     TextField(
-                      controller: _emailController, // Connected Controller
+                      controller: _emailController,
                       keyboardType: TextInputType.emailAddress,
                       decoration: _buildInputDecoration(
                           "your@email.com", Icons.email_outlined),
@@ -145,7 +163,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     const Text("Password"),
                     const SizedBox(height: 6),
                     TextField(
-                      controller: _passwordController, // Connected Controller
+                      controller: _passwordController,
                       obscureText: true,
                       decoration: _buildInputDecoration(
                           "Enter your password", Icons.lock_outline),
@@ -195,35 +213,52 @@ class _LoginScreenState extends State<LoginScreen> {
 
                     const SizedBox(height: 16),
 
-                    /// Google Button (Placeholder)
+                    /// Google Button (NOW FUNCTIONAL)
                     SizedBox(
                       width: double.infinity,
                       height: 48,
                       child: OutlinedButton(
-                        onPressed: () {},
+                        onPressed: _isLoading ? null : _handleGoogleLogin,
                         style: OutlinedButton.styleFrom(
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(10),
                           ),
                         ),
-                        child: const Text("Continue with Google"),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: const [
+                            // You can add an image asset here for the Google Logo
+                            Icon(Icons.g_mobiledata,
+                                size: 28, color: Colors.red),
+                            SizedBox(width: 8),
+                            Text("Continue with Google"),
+                          ],
+                        ),
                       ),
                     ),
 
                     const SizedBox(height: 12),
 
-                    /// Apple Button (Placeholder)
+                    /// Apple Button (Still Placeholder)
                     SizedBox(
                       width: double.infinity,
                       height: 48,
                       child: OutlinedButton(
-                        onPressed: () {},
+                        onPressed:
+                            () {}, // Apple Sign In requires Apple Developer Account
                         style: OutlinedButton.styleFrom(
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(10),
                           ),
                         ),
-                        child: const Text("Continue with Apple"),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: const [
+                            Icon(Icons.apple, size: 24, color: Colors.black),
+                            SizedBox(width: 8),
+                            Text("Continue with Apple"),
+                          ],
+                        ),
                       ),
                     ),
 
@@ -233,7 +268,6 @@ class _LoginScreenState extends State<LoginScreen> {
                     Center(
                       child: TextButton(
                         onPressed: () {
-                          // FIXED: Navigate to Registration Screen
                           Navigator.pushNamed(context, AppRoutes.registration);
                         },
                         child: const Text(
@@ -252,7 +286,6 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  // Helper method for clean input styling
   InputDecoration _buildInputDecoration(String hint, IconData icon) {
     return InputDecoration(
       hintText: hint,
