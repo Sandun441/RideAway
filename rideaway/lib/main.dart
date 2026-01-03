@@ -15,6 +15,7 @@ import 'screens/contacts/contacts_screen.dart';
 import 'screens/settings/settings_screen.dart';
 import 'screens/history/ride_history_screen.dart';
 import 'screens/profile/profile_screen.dart';
+import 'screens/auth/RegistrationScreen.dart';
 
 // Change main to async to support initialization
 void main() async {
@@ -42,6 +43,7 @@ class SmartRideApp extends StatelessWidget {
         AppRoutes.splash: (_) => const SplashScreen(),
         AppRoutes.onboarding: (_) => const OnboardingScreen(),
         AppRoutes.login: (_) => const LoginScreen(),
+        AppRoutes.registration: (_) => const RegistrationScreen(),
         AppRoutes.home: (_) => const HomeScreen(),
         AppRoutes.accident: (_) => const AccidentDetectedScreen(),
         AppRoutes.alertSent: (_) => const AlertSentScreen(),
