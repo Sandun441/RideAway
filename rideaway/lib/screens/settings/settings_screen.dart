@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../main.dart'; // for themeNotifier
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -15,10 +16,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
   String countdown = "30 seconds";
   String theme = "Auto (System)";
 
+  String get sensitivityLabel => ["Low", "Medium", "High"][sensitivity.toInt()];
+
   @override
   Widget build(BuildContext context) {
+    final themeData = Theme.of(context);
+
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F7FA),
+      backgroundColor: themeData.scaffoldBackgroundColor,
       appBar: AppBar(
         title: const Text("Settings"),
         leading: IconButton(
@@ -32,18 +37,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
           children: [
             /// Detection Settings
             _card(
+              context,
               title: "Detection Settings",
               icon: Icons.shield_outlined,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _rowTitle("Detection Sensitivity", "Medium"),
+                  _rowTitle(context, "Detection Sensitivity", sensitivityLabel),
                   Slider(
                     value: sensitivity,
                     min: 0,
                     max: 2,
                     divisions: 2,
-                    label: ["Low", "Medium", "High"][sensitivity.toInt()],
+                    label: sensitivityLabel,
                     onChanged: (value) {
                       setState(() => sensitivity = value);
                     },
@@ -56,17 +62,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       Text("High"),
                     ],
                   ),
-                  const SizedBox(height: 10),
-                  const Text(
+                  const SizedBox(height: 8),
+                  Text(
                     "Higher sensitivity detects smaller impacts but may cause false alerts.",
-                    style: TextStyle(fontSize: 12, color: Colors.grey),
+                    style: themeData.textTheme.bodySmall,
                   ),
                   const SizedBox(height: 10),
                   _switchTile(
+                    context,
                     "GPS Location Tracking",
                     "Share location in emergency alerts",
                     gpsEnabled,
-                        (val) => setState(() => gpsEnabled = val),
+                    (val) => setState(() => gpsEnabled = val),
                   ),
                 ],
               ),
@@ -76,31 +83,39 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
             /// Notifications
             _card(
+              context,
               title: "Notifications",
               icon: Icons.notifications_outlined,
               child: Column(
                 children: [
                   _switchTile(
+                    context,
                     "Push Notifications",
                     "Receive app notifications",
                     pushNotifications,
-                        (val) => setState(() => pushNotifications = val),
+                    (val) => setState(() => pushNotifications = val),
                   ),
                   _switchTile(
+                    context,
                     "Vibration Alerts",
                     "Vibrate during accident detection",
                     vibrationAlerts,
-                        (val) => setState(() => vibrationAlerts = val),
+                    (val) => setState(() => vibrationAlerts = val),
                   ),
                   _dropdownTile(
+                    context,
                     "Emergency Countdown",
                     countdown,
                     ["15 seconds", "30 seconds", "60 seconds"],
-                        (val) => setState(() => countdown = val!),
+                    (val) => setState(() => countdown = val!),
                   ),
-                  const Text(
-                    "Time before emergency contacts are notified",
-                    style: TextStyle(fontSize: 12, color: Colors.grey),
+                  Padding(
+                    padding:
+                        const EdgeInsets.only(left: 16, right: 16, bottom: 8),
+                    child: Text(
+                      "Time before emergency contacts are notified",
+                      style: themeData.textTheme.bodySmall,
+                    ),
                   ),
                 ],
               ),
@@ -110,13 +125,25 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
             /// Appearance
             _card(
+              context,
               title: "Appearance",
               icon: Icons.palette_outlined,
               child: _dropdownTile(
+                context,
                 "Theme",
                 theme,
                 ["Auto (System)", "Light", "Dark"],
-                    (val) => setState(() => theme = val!),
+                (val) {
+                  setState(() => theme = val!);
+
+                  if (val == "Light") {
+                    themeNotifier.value = ThemeMode.light;
+                  } else if (val == "Dark") {
+                    themeNotifier.value = ThemeMode.dark;
+                  } else {
+                    themeNotifier.value = ThemeMode.system;
+                  }
+                },
               ),
             ),
 
@@ -124,6 +151,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
             /// Privacy & Legal
             _card(
+              context,
               title: "Privacy & Legal",
               icon: Icons.privacy_tip_outlined,
               child: Column(
@@ -147,13 +175,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
             const SizedBox(height: 30),
 
             /// Footer
-            const Column(
+            Column(
               children: [
-                Text("Smart Ride Safety",
-                    style: TextStyle(fontWeight: FontWeight.bold)),
-                SizedBox(height: 4),
-                Text("Version 1.2.3",
-                    style: TextStyle(fontSize: 12, color: Colors.grey)),
+                Text(
+                  "Smart Ride Safety",
+                  style: themeData.textTheme.titleMedium
+                      ?.copyWith(fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  "Version 1.2.3",
+                  style: themeData.textTheme.bodySmall,
+                ),
               ],
             ),
           ],
@@ -162,16 +195,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  /// Reusable Card
-  Widget _card({
+  /// Card widget (THEME AWARE)
+  Widget _card(
+    BuildContext context, {
     required String title,
     required IconData icon,
     required Widget child,
   }) {
+    final themeData = Theme.of(context);
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: themeData.cardColor,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
@@ -186,10 +222,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
         children: [
           Row(
             children: [
-              Icon(icon, color: Colors.blue),
+              Icon(icon, color: themeData.colorScheme.primary),
               const SizedBox(width: 8),
-              Text(title,
-                  style: const TextStyle(fontWeight: FontWeight.bold)),
+              Text(
+                title,
+                style: themeData.textTheme.titleMedium
+                    ?.copyWith(fontWeight: FontWeight.bold),
+              ),
             ],
           ),
           const SizedBox(height: 12),
@@ -199,23 +238,30 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  Widget _rowTitle(String left, String right) {
+  Widget _rowTitle(BuildContext context, String left, String right) {
+    final themeData = Theme.of(context);
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(left, style: const TextStyle(fontWeight: FontWeight.w600)),
-        Text(right, style: const TextStyle(color: Colors.blue)),
+        Text(left,
+            style: themeData.textTheme.bodyMedium
+                ?.copyWith(fontWeight: FontWeight.w600)),
+        Text(right,
+            style:
+                themeData.textTheme.bodyMedium?.copyWith(color: Colors.blue)),
       ],
     );
   }
 
   Widget _switchTile(
-      String title,
-      String subtitle,
-      bool value,
-      Function(bool) onChanged,
-      ) {
+    BuildContext context,
+    String title,
+    String subtitle,
+    bool value,
+    Function(bool) onChanged,
+  ) {
     return SwitchListTile(
+      contentPadding: EdgeInsets.zero,
       title: Text(title),
       subtitle: Text(subtitle),
       value: value,
@@ -224,12 +270,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Widget _dropdownTile(
-      String title,
-      String value,
-      List<String> items,
-      Function(String?) onChanged,
-      ) {
+    BuildContext context,
+    String title,
+    String value,
+    List<String> items,
+    Function(String?) onChanged,
+  ) {
     return ListTile(
+      contentPadding: EdgeInsets.zero,
       title: Text(title),
       trailing: DropdownButton<String>(
         value: value,
@@ -237,7 +285,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         items: items
             .map(
               (e) => DropdownMenuItem(value: e, child: Text(e)),
-        )
+            )
             .toList(),
         onChanged: onChanged,
       ),
