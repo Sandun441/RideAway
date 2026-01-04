@@ -1,45 +1,51 @@
 # 🛡️ Smart Ride Safety (RideAway)
 
-A Flutter application designed to enhance rider safety through accident detection and emergency response systems. This app monitors ride metrics and automatically alerts emergency contacts in the event of a crash.
+**An AI-powered emergency response application that uses on-device Machine Learning to detect vehicle accidents in real-time.**
 
-## 📱 Features
+RideAway transforms your smartphone into a safety companion. By continuously analyzing sensor data (Accelerometer & Gyroscope) using a custom-trained TensorFlow Lite model, the app can instantly distinguish between normal riding patterns and crash impacts, automatically triggering alerts to your emergency contacts.
 
-### ✅ Completed
-- **Splash & Onboarding:** Smooth introduction to the app's value proposition.
+## 🧠 The Core Technology (Machine Learning)
+
+At the heart of RideAway is a lightweight **Deep Learning Model** optimized for mobile devices.
+
+* **Data Source:** Captures 3-axis accelerometer and gyroscope data directly from the device hardware.
+* **The Model:** A pre-trained Neural Network (deployed via `.tflite`) that classifies movement patterns.
+* **Inference:** Runs locally on the device (Edge AI) for zero-latency detection, ensuring alerts work even with poor internet connection.
+* **Thresholding:** Filters out false positives (like dropping the phone or sudden braking) to ensure reliability.
+
+
+
+## 📱 Key Features
+
+### 🚀 Core Intelligence
+- **Real-time Crash Detection:** Continuous background monitoring of vehicle dynamics.
+- **Smart Filtering:** AI logic to differentiate between a "Hard Stop" and a "Crash."
+- **Automatic SOS:** Sends SMS with precise GPS coordinates immediately after a confirmed accident.
+
+### ✅ Completed Modules
 - **Authentication System:**
-  - Secure Email & Password Login.
-  - **Google Sign-In** integration.
-  - User Registration with Password Confirmation.
-  - Input validation and loading states.
-- **Cloud Database:**
-  - Automatic user profile creation in **Cloud Firestore** upon registration or first Google Login.
-- **Navigation:** robust routing system (`AppRoutes`).
+  - Secure Email/Password & **Google Sign-In**.
+  - Cloud Firestore User Profiles.
+- **User Interface:**
+  - Modern, responsive UI with Onboarding and Safety Dashboard.
+- **Navigation:** Robust routing architecture.
 
-### 🚧 In Progress / Roadmap
-- [ ] **Accident Detection:** Background service using accelerometer/gyroscope.
-- [ ] **Emergency Contacts:** UI to add/edit trusted contacts in Firestore.
-- [ ] **Ride History:** Logging trip routes and timestamps.
-- [ ] **SMS Alerts:** Automated text messaging with GPS coordinates.
-- [ ] **Google Maps Integration:** Live location tracking.
+### 🚧 Roadmap
+- [ ] Integration of the `.tflite` model into the Flutter background isolate.
+- [ ] Emergency Contact Management (CRUD).
+- [ ] Ride History & Analytics.
+- [ ] False Alarm Cancellation (Countdown timer before sending alert).
 
 ## 🛠️ Tech Stack
 
-- **Framework:** [Flutter](https://flutter.dev/)
-- **Language:** Dart
-- **Backend:** Firebase (Core, Auth, Firestore)
-- **Packages:**
-  - `firebase_auth`: User authentication.
-  - `cloud_firestore`: NoSQL database.
-  - `google_sign_in`: Google OAuth provider.
+- **Framework:** [Flutter](https://flutter.dev/) (Dart)
+- **Machine Learning:**
+  - TensorFlow Lite (Model export)
+  - `tflite_flutter` (In-app inference)
+- **Backend:** Firebase (Auth, Firestore)
+- **State Management:** `setState` (transitioning to Provider/Bloc)
 
 ## 🚀 Getting Started
-
-Follow these steps to run the project locally.
-
-### Prerequisites
-- Flutter SDK installed.
-- Android Studio / VS Code set up.
-- An Android Emulator or Physical Device.
 
 ### 1. Clone the Repository
 ```bash
