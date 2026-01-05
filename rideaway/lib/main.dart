@@ -17,12 +17,12 @@ import 'screens/profile/profile_screen.dart';
 import 'screens/accident/accident_detected_screen.dart';
 import 'screens/accident/alert_sent_screen.dart';
 
+import 'screens/auth/RegistrationScreen.dart';
+
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
   final auth = FirebaseAuth.instance;
   if (auth.currentUser == null) {
@@ -55,6 +55,7 @@ class SmartRideApp extends StatelessWidget {
             AppRoutes.profile: (_) => const ProfileScreen(),
             AppRoutes.accident: (_) => const AccidentDetectedScreen(),
             AppRoutes.alertSent: (_) => const AlertSentScreen(),
+            AppRoutes.registration: (_) => const RegistrationScreen(),
           },
         );
       },

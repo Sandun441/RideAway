@@ -1,51 +1,65 @@
 import 'package:flutter/material.dart';
 import '../../routes/app_routes.dart';
-import '../../services/auth_service.dart'; // Ensure this import exists
+import '../../services/auth_service.dart';
 
-class LoginScreen extends StatefulWidget {
-  const LoginScreen({super.key});
+class RegistrationScreen extends StatefulWidget {
+  const RegistrationScreen({super.key});
 
   @override
-  State<LoginScreen> createState() => _LoginScreenState();
+  State<RegistrationScreen> createState() => _RegistrationScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
-  // 1. Controllers to capture user input
+class _RegistrationScreenState extends State<RegistrationScreen> {
+  // 1. Add a new controller for the confirmation field
+  final TextEditingController _nameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+  final TextEditingController _confirmPasswordController =
+      TextEditingController(); // NEW
 
-  // 2. State variable for loading spinner
   bool _isLoading = false;
 
-  // 3. Logic to handle Login
-  void _handleLogin() async {
-    // Hide keyboard
-    FocusScope.of(context).unfocus();
+  void _handleSignUp() async {
+    // 2. Add Validation Logic
+    String password = _passwordController.text.trim();
+    String confirmPassword = _confirmPasswordController.text.trim();
 
-    setState(() => _isLoading = true); // Start loading
+    if (_emailController.text.isEmpty || password.length < 6) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Please enter a valid email and 6+ char password"),
+        ),
+      );
+      return;
+    }
 
-    // Call the AuthService
-    final user = await AuthService().login(
+    // Check if passwords match
+    if (password != confirmPassword) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Passwords do not match!"),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    setState(() => _isLoading = true);
+
+    final user = await AuthService().signUp(
       _emailController.text.trim(),
-      _passwordController.text.trim(),
+      password,
     );
 
-    setState(() => _isLoading = false); // Stop loading
+    setState(() => _isLoading = false);
 
     if (user != null) {
-      // Success! Navigate to Home
-      if (mounted) {
-        Navigator.pushReplacementNamed(context, AppRoutes.home);
-      }
+      if (mounted) Navigator.pushReplacementNamed(context, AppRoutes.home);
     } else {
-      // Failure! Show error snackbar
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text(
-              "Login Failed. Please check your email and password.",
-            ),
-            backgroundColor: Colors.red,
+            content: Text("Registration failed. Email may already be in use."),
           ),
         );
       }
@@ -54,9 +68,11 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   void dispose() {
-    // Clean up controllers when screen is removed
+    // Clean up controllers
+    _nameController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
+    _confirmPasswordController.dispose();
     super.dispose();
   }
 
@@ -71,7 +87,7 @@ class _LoginScreenState extends State<LoginScreen> {
             children: [
               const SizedBox(height: 20),
 
-              /// App Header
+              // ... Your Header Code (Same as before) ...
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: const [
@@ -90,7 +106,6 @@ class _LoginScreenState extends State<LoginScreen> {
 
               const SizedBox(height: 40),
 
-              /// Login Card
               Container(
                 width: double.infinity,
                 padding: const EdgeInsets.all(20),
@@ -110,28 +125,31 @@ class _LoginScreenState extends State<LoginScreen> {
                   children: [
                     const Center(
                       child: Text(
-                        "Welcome Back",
+                        "Create Account",
                         style: TextStyle(
                           fontSize: 22,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
                     ),
+                    const SizedBox(height: 25),
+
+                    const Text("Full Name"),
                     const SizedBox(height: 6),
-                    const Center(
-                      child: Text(
-                        "Sign in to continue your safe rides",
-                        style: TextStyle(color: Colors.grey),
+                    TextField(
+                      controller: _nameController,
+                      decoration: _buildInputDecoration(
+                        "Enter your name",
+                        Icons.person_outline,
                       ),
                     ),
 
-                    const SizedBox(height: 25),
+                    const SizedBox(height: 16),
 
-                    /// Email Field
                     const Text("Email"),
                     const SizedBox(height: 6),
                     TextField(
-                      controller: _emailController, // Connected Controller
+                      controller: _emailController,
                       keyboardType: TextInputType.emailAddress,
                       decoration: _buildInputDecoration(
                         "your@email.com",
@@ -141,110 +159,63 @@ class _LoginScreenState extends State<LoginScreen> {
 
                     const SizedBox(height: 16),
 
-                    /// Password Field
                     const Text("Password"),
                     const SizedBox(height: 6),
                     TextField(
-                      controller: _passwordController, // Connected Controller
+                      controller: _passwordController,
                       obscureText: true,
                       decoration: _buildInputDecoration(
-                        "Enter your password",
+                        "Create a password",
                         Icons.lock_outline,
                       ),
                     ),
 
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 16),
 
-                    /// Sign In Button
+                    // 3. New Confirm Password Field
+                    const Text("Confirm Password"),
+                    const SizedBox(height: 6),
+                    TextField(
+                      controller:
+                          _confirmPasswordController, // Link to new controller
+                      obscureText: true,
+                      decoration: _buildInputDecoration(
+                        "Re-enter password",
+                        Icons.lock_clock_outlined,
+                      ),
+                    ),
+
+                    const SizedBox(height: 25),
+
                     SizedBox(
                       width: double.infinity,
                       height: 48,
                       child: ElevatedButton(
-                        onPressed: _isLoading ? null : _handleLogin,
+                        onPressed: _isLoading ? null : _handleSignUp,
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.blue,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
                         ),
                         child: _isLoading
-                            ? const SizedBox(
-                                height: 20,
-                                width: 20,
-                                child: CircularProgressIndicator(
-                                  color: Colors.white,
-                                  strokeWidth: 2,
-                                ),
+                            ? const CircularProgressIndicator(
+                                color: Colors.white,
                               )
                             : const Text(
-                                "Sign In",
+                                "Sign Up",
                                 style: TextStyle(
-                                  fontSize: 16,
                                   color: Colors.white,
+                                  fontSize: 16,
                                 ),
                               ),
                       ),
                     ),
 
-                    const SizedBox(height: 16),
-
-                    /// OR Divider
-                    Row(
-                      children: const [
-                        Expanded(child: Divider()),
-                        Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 8),
-                          child: Text("or"),
-                        ),
-                        Expanded(child: Divider()),
-                      ],
-                    ),
-
-                    const SizedBox(height: 16),
-
-                    /// Google Button (Placeholder)
-                    SizedBox(
-                      width: double.infinity,
-                      height: 48,
-                      child: OutlinedButton(
-                        onPressed: () {},
-                        style: OutlinedButton.styleFrom(
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                        ),
-                        child: const Text("Continue with Google"),
-                      ),
-                    ),
-
-                    const SizedBox(height: 12),
-
-                    /// Apple Button (Placeholder)
-                    SizedBox(
-                      width: double.infinity,
-                      height: 48,
-                      child: OutlinedButton(
-                        onPressed: () {},
-                        style: OutlinedButton.styleFrom(
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                        ),
-                        child: const Text("Continue with Apple"),
-                      ),
-                    ),
-
                     const SizedBox(height: 20),
 
-                    /// Sign Up Navigation
                     Center(
                       child: TextButton(
-                        onPressed: () {
-                          // FIXED: Navigate to Registration Screen
-                          Navigator.pushNamed(context, AppRoutes.registration);
-                        },
+                        onPressed: () => Navigator.pop(context),
                         child: const Text(
-                          "Don't have an account? Sign up",
+                          "Already have an account? Login",
                           style: TextStyle(color: Colors.blue),
                         ),
                       ),
@@ -259,7 +230,6 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  // Helper method for clean input styling
   InputDecoration _buildInputDecoration(String hint, IconData icon) {
     return InputDecoration(
       hintText: hint,
