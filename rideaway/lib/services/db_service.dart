@@ -6,6 +6,7 @@ class DatabaseService {
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
   // Save user data (Existing)
   Future<void> saveUser(String uid, String name, String email) async {
     try {
@@ -17,6 +18,8 @@ class DatabaseService {
         'emergencyContacts': [],
       });
 =======
+=======
+>>>>>>> Stashed changes
 =======
 >>>>>>> Stashed changes
 =======
@@ -43,6 +46,9 @@ class DatabaseService {
       // This preserves your phone/location data on future logins.
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
 =======
 >>>>>>> Stashed changes
@@ -56,7 +62,11 @@ class DatabaseService {
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
   // NEW: Get user data by UID
+=======
+  // ... keep getUser and updateUserProfile the same ...
+>>>>>>> Stashed changes
 =======
   // ... keep getUser and updateUserProfile the same ...
 >>>>>>> Stashed changes
@@ -81,7 +91,10 @@ class DatabaseService {
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 =======
+=======
+>>>>>>> Stashed changes
 =======
 >>>>>>> Stashed changes
 =======
@@ -97,6 +110,9 @@ class DatabaseService {
   }
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
 =======
 >>>>>>> Stashed changes
