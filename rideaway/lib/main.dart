@@ -5,6 +5,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'firebase_options.dart';
 
 import 'core/theme/app_theme.dart';
+import 'core/theme/theme_controller.dart';
 import 'routes/app_routes.dart';
 
 import 'screens/auth/login_screen.dart';
@@ -16,10 +17,6 @@ import 'screens/profile/profile_screen.dart';
 import 'screens/accident/accident_detected_screen.dart';
 import 'screens/accident/alert_sent_screen.dart';
 
-/// 🌗 GLOBAL THEME CONTROLLER
-final ValueNotifier<ThemeMode> themeNotifier =
-    ValueNotifier<ThemeMode>(ThemeMode.system);
-
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
@@ -27,7 +24,6 @@ Future<void> main() async {
     options: DefaultFirebaseOptions.currentPlatform,
   );
 
-  // ✅ ENSURE USER ALWAYS EXISTS
   final auth = FirebaseAuth.instance;
   if (auth.currentUser == null) {
     await auth.signInAnonymously();
@@ -42,20 +38,14 @@ class SmartRideApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ValueListenableBuilder<ThemeMode>(
-      valueListenable: themeNotifier,
-      builder: (context, themeMode, _) {
+      valueListenable: ThemeController.themeMode,
+      builder: (context, mode, _) {
         return MaterialApp(
           debugShowCheckedModeBanner: false,
-
-          /// ✅ THEMES
           theme: AppTheme.lightTheme,
           darkTheme: AppTheme.darkTheme,
-          themeMode: themeMode,
-
-          /// ✅ SAFE START
+          themeMode: mode,
           home: const LoginScreen(),
-
-          /// ✅ ROUTES (USER ACTION ONLY)
           routes: {
             AppRoutes.home: (_) => const HomeScreen(),
             AppRoutes.contacts: (_) => const ContactsScreen(),

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../main.dart'; // for themeNotifier
+import '../../core/theme/theme_controller.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -17,6 +17,21 @@ class _SettingsScreenState extends State<SettingsScreen> {
   String theme = "Auto (System)";
 
   String get sensitivityLabel => ["Low", "Medium", "High"][sensitivity.toInt()];
+
+  @override
+  void initState() {
+    super.initState();
+
+    // Sync dropdown with current theme
+    final mode = ThemeController.themeMode.value;
+    if (mode == ThemeMode.dark) {
+      theme = "Dark";
+    } else if (mode == ThemeMode.light) {
+      theme = "Light";
+    } else {
+      theme = "Auto (System)";
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -69,7 +84,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ),
                   const SizedBox(height: 10),
                   _switchTile(
-                    context,
                     "GPS Location Tracking",
                     "Share location in emergency alerts",
                     gpsEnabled,
@@ -89,29 +103,25 @@ class _SettingsScreenState extends State<SettingsScreen> {
               child: Column(
                 children: [
                   _switchTile(
-                    context,
                     "Push Notifications",
                     "Receive app notifications",
                     pushNotifications,
                     (val) => setState(() => pushNotifications = val),
                   ),
                   _switchTile(
-                    context,
                     "Vibration Alerts",
                     "Vibrate during accident detection",
                     vibrationAlerts,
                     (val) => setState(() => vibrationAlerts = val),
                   ),
                   _dropdownTile(
-                    context,
                     "Emergency Countdown",
                     countdown,
                     ["15 seconds", "30 seconds", "60 seconds"],
                     (val) => setState(() => countdown = val!),
                   ),
                   Padding(
-                    padding:
-                        const EdgeInsets.only(left: 16, right: 16, bottom: 8),
+                    padding: const EdgeInsets.only(left: 16, bottom: 8),
                     child: Text(
                       "Time before emergency contacts are notified",
                       style: themeData.textTheme.bodySmall,
@@ -129,7 +139,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
               title: "Appearance",
               icon: Icons.palette_outlined,
               child: _dropdownTile(
-                context,
                 "Theme",
                 theme,
                 ["Auto (System)", "Light", "Dark"],
@@ -137,11 +146,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   setState(() => theme = val!);
 
                   if (val == "Light") {
-                    themeNotifier.value = ThemeMode.light;
+                    ThemeController.themeMode.value = ThemeMode.light;
                   } else if (val == "Dark") {
-                    themeNotifier.value = ThemeMode.dark;
+                    ThemeController.themeMode.value = ThemeMode.dark;
                   } else {
-                    themeNotifier.value = ThemeMode.system;
+                    ThemeController.themeMode.value = ThemeMode.system;
                   }
                 },
               ),
@@ -195,7 +204,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  /// Card widget (THEME AWARE)
+  /// Reusable widgets
+
   Widget _card(
     BuildContext context, {
     required String title,
@@ -254,7 +264,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Widget _switchTile(
-    BuildContext context,
     String title,
     String subtitle,
     bool value,
@@ -270,7 +279,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Widget _dropdownTile(
-    BuildContext context,
     String title,
     String value,
     List<String> items,
