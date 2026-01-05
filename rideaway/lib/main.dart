@@ -14,8 +14,7 @@ import 'screens/contacts/contacts_screen.dart';
 import 'screens/settings/settings_screen.dart';
 import 'screens/history/ride_history_screen.dart';
 import 'screens/profile/profile_screen.dart';
-import 'screens/accident/accident_detected_screen.dart';
-import 'screens/accident/alert_sent_screen.dart';
+import 'screens/auth/RegistrationScreen.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -37,25 +36,22 @@ class SmartRideApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ValueListenableBuilder<ThemeMode>(
-      valueListenable: ThemeController.themeMode,
-      builder: (context, mode, _) {
-        return MaterialApp(
-          debugShowCheckedModeBanner: false,
-          theme: AppTheme.lightTheme,
-          darkTheme: AppTheme.darkTheme,
-          themeMode: mode,
-          home: const LoginScreen(),
-          routes: {
-            AppRoutes.home: (_) => const HomeScreen(),
-            AppRoutes.contacts: (_) => const ContactsScreen(),
-            AppRoutes.settings: (_) => const SettingsScreen(),
-            AppRoutes.history: (_) => const RideHistoryScreen(),
-            AppRoutes.profile: (_) => const ProfileScreen(),
-            AppRoutes.accident: (_) => const AccidentDetectedScreen(),
-            AppRoutes.alertSent: (_) => const AlertSentScreen(),
-          },
-        );
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      theme: AppTheme.lightTheme,
+      initialRoute: AppRoutes.splash,
+      routes: {
+        AppRoutes.splash: (_) => const SplashScreen(),
+        AppRoutes.onboarding: (_) => const OnboardingScreen(),
+        AppRoutes.login: (_) => const LoginScreen(),
+        AppRoutes.registration: (_) => const RegistrationScreen(),
+        AppRoutes.home: (_) => const HomeScreen(),
+        AppRoutes.accident: (_) => const AccidentDetectedScreen(),
+        AppRoutes.alertSent: (_) => const AlertSentScreen(),
+        AppRoutes.contacts: (_) => const ContactsScreen(),
+        AppRoutes.settings: (_) => const SettingsScreen(),
+        AppRoutes.profile: (_) => const ProfileScreen(),
+        AppRoutes.history: (_) => const RideHistoryScreen(),
       },
     );
   }
