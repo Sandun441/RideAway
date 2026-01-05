@@ -5,6 +5,7 @@ class DatabaseService {
 
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
   // Save user data (Existing)
   Future<void> saveUser(String uid, String name, String email) async {
     try {
@@ -16,6 +17,8 @@ class DatabaseService {
         'emergencyContacts': [],
       });
 =======
+=======
+>>>>>>> Stashed changes
 =======
 >>>>>>> Stashed changes
   // 1. SAVE USER (Fixed to prevent overwriting)
@@ -39,6 +42,9 @@ class DatabaseService {
       // If snapshot.exists is true, we do NOTHING.
       // This preserves your phone/location data on future logins.
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
 =======
 >>>>>>> Stashed changes
@@ -49,7 +55,11 @@ class DatabaseService {
 
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
   // NEW: Get user data by UID
+=======
+  // ... keep getUser and updateUserProfile the same ...
+>>>>>>> Stashed changes
 =======
   // ... keep getUser and updateUserProfile the same ...
 >>>>>>> Stashed changes
@@ -70,7 +80,10 @@ class DatabaseService {
   }
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 =======
+=======
+>>>>>>> Stashed changes
 =======
 >>>>>>> Stashed changes
 
@@ -83,6 +96,9 @@ class DatabaseService {
     }
   }
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
 =======
 >>>>>>> Stashed changes
