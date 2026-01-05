@@ -1,7 +1,112 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import '../../services/auth_service.dart';
+import '../../services/db_service.dart';
+import '../../routes/app_routes.dart';
+import 'edit_profile_screen.dart'; // Ensure you created this file from the previous step
 
-class ProfileScreen extends StatelessWidget {
+class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
+
+  @override
+  State<ProfileScreen> createState() => _ProfileScreenState();
+}
+
+class _ProfileScreenState extends State<ProfileScreen> {
+  // Data Variables
+  Map<String, dynamic> _userData =
+      {}; // Store raw data for passing to Edit Screen
+  String _fullName = "Loading...";
+  String _email = "Loading...";
+  String _phone = "Not set";
+  String _location = "Not set";
+  String _initials = "..";
+
+  // Verification State
+  bool _isVerified = false;
+  bool _isLoading = true;
+
+  // Track specific missing items for the UI
+  bool _missingPhone = true;
+  bool _missingLocation = true;
+  bool _missingContact = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchUserData();
+  }
+
+  // 1. Fetch Data & Check Verification Status
+  void _fetchUserData() async {
+    final User? currentUser = FirebaseAuth.instance.currentUser;
+
+    if (currentUser != null) {
+      final data = await DatabaseService().getUser(currentUser.uid);
+
+      if (data != null && mounted) {
+        setState(() {
+          _userData = data;
+          _fullName = data['fullName'] ?? "Unknown";
+          _email = data['email'] ?? currentUser.email;
+
+          // Helper to check if string is null or empty
+          bool hasText(String? val) => val != null && val.isNotEmpty;
+
+          _phone = hasText(data['phone']) ? data['phone'] : "Not set";
+          _location = hasText(data['location']) ? data['location'] : "Not set";
+
+          // Initials Logic
+          if (_fullName.isNotEmpty) {
+            _initials = _fullName
+                .trim()
+                .split(' ')
+                .map((l) => l.isNotEmpty ? l[0] : '')
+                .take(2)
+                .join()
+                .toUpperCase();
+          }
+
+          // --- VERIFICATION LOGIC ---
+          _missingPhone = !hasText(data['phone']);
+          _missingLocation = !hasText(data['location']);
+
+          List contacts = data['emergencyContacts'] ?? [];
+          _missingContact = contacts.isEmpty;
+
+          // verified only if NOTHING is missing
+          _isVerified = !_missingPhone && !_missingLocation && !_missingContact;
+
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
+  // 2. Navigate to Edit Screen
+  void _navigateToEdit() async {
+    // We wait for the result. If 'true' returned, it means data changed.
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(
+          builder: (_) => EditProfileScreen(currentData: _userData)),
+    );
+
+    // Refresh data if saved
+    if (result == true) {
+      setState(() => _isLoading = true);
+      _fetchUserData();
+    }
+  }
+
+  // 3. Handle Sign Out
+  void _handleSignOut() async {
+    await AuthService().signOut();
+    if (mounted) {
+      Navigator.pushNamedAndRemoveUntil(
+          context, AppRoutes.login, (route) => false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -16,183 +121,210 @@ class ProfileScreen extends StatelessWidget {
         actions: [
           IconButton(
             icon: const Icon(Icons.edit_outlined),
-            onPressed: () {},
+            onPressed: _navigateToEdit, // Connected Edit Function
           ),
         ],
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          children: [
-            /// Profile Card
-            _card(
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : SingleChildScrollView(
+              padding: const EdgeInsets.all(20),
               child: Column(
                 children: [
-                  Row(
-                    children: [
-                      const CircleAvatar(
-                        radius: 28,
-                        backgroundColor: Colors.blue,
-                        child: Text(
-                          "AJ",
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 18,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                  /// Profile Card
+                  _card(
+                    child: Column(
+                      children: [
+                        Row(
                           children: [
-                            const Text(
-                              "Alex Johnson",
-                              style: TextStyle(
-                                  fontSize: 16, fontWeight: FontWeight.bold),
+                            CircleAvatar(
+                              radius: 30,
+                              backgroundColor: Colors.blue,
+                              child: Text(_initials,
+                                  style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold)),
                             ),
-                            const SizedBox(height: 4),
-                            const Text(
-                              "Cycling enthusiast since 2020",
-                              style:
-                              TextStyle(fontSize: 12, color: Colors.grey),
-                            ),
-                            const SizedBox(height: 6),
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 8, vertical: 4),
-                              decoration: BoxDecoration(
-                                color: Colors.green.shade100,
-                                borderRadius: BorderRadius.circular(20),
-                              ),
-                              child: const Text(
-                                "Verified Rider",
-                                style: TextStyle(
-                                    fontSize: 12, color: Colors.green),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(_fullName,
+                                      style: const TextStyle(
+                                          fontSize: 18,
+                                          fontWeight: FontWeight.bold)),
+                                  const SizedBox(height: 6),
+
+                                  // --- VERIFIED / UNVERIFIED BADGE ---
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 10, vertical: 5),
+                                    decoration: BoxDecoration(
+                                      color: _isVerified
+                                          ? Colors.green.shade100
+                                          : Colors.orange.shade100,
+                                      borderRadius: BorderRadius.circular(20),
+                                    ),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Icon(
+                                            _isVerified
+                                                ? Icons.verified
+                                                : Icons.warning_amber_rounded,
+                                            size: 16,
+                                            color: _isVerified
+                                                ? Colors.green.shade700
+                                                : Colors.deepOrange.shade700),
+                                        const SizedBox(width: 5),
+                                        Text(
+                                          _isVerified
+                                              ? "Verified Account"
+                                              : "Action Required",
+                                          style: TextStyle(
+                                              fontSize: 12,
+                                              color: _isVerified
+                                                  ? Colors.green.shade800
+                                                  : Colors.deepOrange.shade800,
+                                              fontWeight: FontWeight.bold),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
                           ],
                         ),
-                      ),
+
+                        const SizedBox(height: 20),
+
+                        // --- MISSING ITEMS LIST (Only shows if unverified) ---
+                        if (!_isVerified) ...[
+                          const Divider(),
+                          const Align(
+                              alignment: Alignment.centerLeft,
+                              child: Text("Complete profile to verify:",
+                                  style: TextStyle(
+                                      fontSize: 12,
+                                      color: Colors.grey,
+                                      fontWeight: FontWeight.bold))),
+                          const SizedBox(height: 8),
+                          if (_missingPhone) _missingItem("Add Phone Number"),
+                          if (_missingLocation) _missingItem("Add Location"),
+                          if (_missingContact)
+                            _missingItem("Add at least 1 Emergency Contact"),
+                          const SizedBox(height: 10),
+                        ],
+
+                        const Divider(),
+                        _infoRow(Icons.email_outlined, _email),
+                        _infoRow(Icons.phone_outlined, _phone),
+                        _infoRow(Icons.location_on_outlined, _location),
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(height: 20),
+
+                  /// Statistics Card (Placeholders)
+                  _card(
+                    title: "Riding Statistics",
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      children: const [
+                        _StatItem(
+                            value: "0",
+                            label: "Total Rides",
+                            color: Colors.blue),
+                        _StatItem(
+                            value: "0 km",
+                            label: "Distance",
+                            color: Colors.green),
+                        _StatItem(
+                            value: "-",
+                            label: "Safety Score",
+                            color: Colors.purple),
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(height: 20),
+
+                  /// Safety Features Status
+                  _card(
+                    title: "Safety Features",
+                    child: Column(
+                      children: [
+                        _featureTile(
+                            "Accident Detection", "Ready", Colors.green),
+                        _featureTile(
+                            "Location Sharing",
+                            _missingLocation ? "Missing Info" : "Ready",
+                            _missingLocation ? Colors.orange : Colors.blue),
+                        _featureTile(
+                            "Emergency Contacts",
+                            _missingContact ? "Empty" : "Configured",
+                            _missingContact ? Colors.red : Colors.green),
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(height: 20),
+
+                  /// Footer
+                  const Column(
+                    children: [
+                      Text("Smart Ride Safety",
+                          style: TextStyle(fontWeight: FontWeight.bold)),
+                      SizedBox(height: 4),
+                      Text("Version 1.0.0",
+                          style: TextStyle(fontSize: 12, color: Colors.grey)),
                     ],
                   ),
-                  const SizedBox(height: 16),
-                  _infoRow(Icons.email_outlined,
-                      "alex.johnson@email.com"),
-                  _infoRow(Icons.phone_outlined, "+1 (555) 123-4567"),
-                  _infoRow(Icons.location_on_outlined, "San Francisco, CA"),
-                ],
-              ),
-            ),
 
-            const SizedBox(height: 20),
+                  const SizedBox(height: 20),
 
-            /// Riding Statistics
-            _card(
-              title: "Riding Statistics",
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: const [
-                  _StatItem(
-                      value: "47", label: "Total Rides", color: Colors.blue),
-                  _StatItem(
-                      value: "342 km",
-                      label: "Distance",
-                      color: Colors.green),
-                  _StatItem(
-                      value: "98%",
-                      label: "Safety Score",
-                      color: Colors.purple),
-                ],
-              ),
-            ),
-
-            const SizedBox(height: 20),
-
-            /// Safety Features
-            _card(
-              title: "Safety Features",
-              child: Column(
-                children: [
-                  _featureTile(
-                      "Accident Detection", "Enabled", Colors.green),
-                  _featureTile(
-                      "Location Sharing", "Active", Colors.blue),
-                  _featureTile(
-                      "Emergency Contacts", "Configured", Colors.grey),
-                ],
-              ),
-            ),
-
-            const SizedBox(height: 20),
-
-            /// Account
-            _card(
-              title: "Account",
-              child: Column(
-                children: const [
-                  ListTile(
-                    title: Text("Privacy Settings"),
-                    trailing: Icon(Icons.chevron_right),
-                  ),
-                  ListTile(
-                    title: Text("Notification Preferences"),
-                    trailing: Icon(Icons.chevron_right),
-                  ),
-                  ListTile(
-                    title: Text("Help & Support"),
-                    trailing: Icon(Icons.chevron_right),
+                  /// Sign Out Button
+                  SizedBox(
+                    width: double.infinity,
+                    height: 46,
+                    child: OutlinedButton.icon(
+                      onPressed: _handleSignOut,
+                      icon: const Icon(Icons.logout, color: Colors.red),
+                      label: const Text("Sign Out",
+                          style: TextStyle(color: Colors.red)),
+                      style: OutlinedButton.styleFrom(
+                        side: const BorderSide(color: Colors.red),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12)),
+                      ),
+                    ),
                   ),
                 ],
               ),
             ),
+    );
+  }
 
-            const SizedBox(height: 20),
+  // --- HELPER WIDGETS ---
 
-            /// Footer
-            const Column(
-              children: [
-                Text("Smart Ride Safety",
-                    style: TextStyle(fontWeight: FontWeight.bold)),
-                SizedBox(height: 4),
-                Text(
-                  "Version 1.2.3 · Terms · Privacy",
-                  style: TextStyle(fontSize: 12, color: Colors.grey),
-                ),
-              ],
-            ),
-
-            const SizedBox(height: 20),
-
-            /// Sign Out
-            SizedBox(
-              width: double.infinity,
-              height: 46,
-              child: OutlinedButton.icon(
-                onPressed: () {
-                  Navigator.pop(context);
-                },
-                icon: const Icon(Icons.logout, color: Colors.red),
-                label: const Text(
-                  "Sign Out",
-                  style: TextStyle(color: Colors.red),
-                ),
-                style: OutlinedButton.styleFrom(
-                  side: const BorderSide(color: Colors.red),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
+  Widget _missingItem(String text) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 4),
+      child: Row(
+        children: [
+          const Icon(Icons.cancel, size: 14, color: Colors.redAccent),
+          const SizedBox(width: 8),
+          Text(text,
+              style: const TextStyle(fontSize: 13, color: Colors.redAccent)),
+        ],
       ),
     );
   }
 
-  /// Reusable Card
   Widget _card({String? title, required Widget child}) {
     return Container(
       width: double.infinity,
@@ -212,8 +344,7 @@ class ProfileScreen extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           if (title != null) ...[
-            Text(title,
-                style: const TextStyle(fontWeight: FontWeight.bold)),
+            Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
             const SizedBox(height: 12),
           ],
           child,
@@ -224,29 +355,52 @@ class ProfileScreen extends StatelessWidget {
 
   Widget _infoRow(IconData icon, String text) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 6),
+      padding: const EdgeInsets.only(bottom: 8),
       child: Row(
         children: [
           Icon(icon, size: 18, color: Colors.grey),
           const SizedBox(width: 8),
-          Text(text),
+          Text(text, style: const TextStyle(fontSize: 14)),
         ],
+      ),
+    );
+  }
+
+  Widget _featureTile(String title, String status, Color color) {
+    return ListTile(
+      contentPadding: EdgeInsets.zero,
+      leading: CircleAvatar(
+        radius: 18,
+        backgroundColor: color.withOpacity(0.15),
+        child: Icon(
+            status == "Empty" || status == "Missing Info"
+                ? Icons.priority_high
+                : Icons.check,
+            color: color,
+            size: 16),
+      ),
+      title: Text(title, style: const TextStyle(fontSize: 14)),
+      trailing: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+        decoration: BoxDecoration(
+          color: color.withOpacity(0.15),
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Text(status,
+            style: TextStyle(
+                color: color, fontSize: 12, fontWeight: FontWeight.bold)),
       ),
     );
   }
 }
 
-/// Statistic Item
 class _StatItem extends StatelessWidget {
   final String value;
   final String label;
   final Color color;
 
-  const _StatItem({
-    required this.value,
-    required this.label,
-    required this.color,
-  });
+  const _StatItem(
+      {required this.value, required this.label, required this.color});
 
   @override
   Widget build(BuildContext context) {
@@ -254,35 +408,10 @@ class _StatItem extends StatelessWidget {
       children: [
         Text(value,
             style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: color)),
+                fontSize: 18, fontWeight: FontWeight.bold, color: color)),
         const SizedBox(height: 4),
         Text(label, style: const TextStyle(fontSize: 12)),
       ],
     );
   }
-}
-
-/// Feature Tile
-Widget _featureTile(String title, String status, Color color) {
-  return ListTile(
-    leading: CircleAvatar(
-      radius: 18,
-      backgroundColor: color.withOpacity(0.15),
-      child: Icon(Icons.check, color: color),
-    ),
-    title: Text(title),
-    trailing: Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.15),
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Text(
-        status,
-        style: TextStyle(color: color, fontSize: 12),
-      ),
-    ),
-  );
 }
