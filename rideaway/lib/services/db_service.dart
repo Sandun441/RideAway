@@ -3,22 +3,32 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 class DatabaseService {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
 
-  // Save user data (Existing)
+  // 1. SAVE USER (Fixed to prevent overwriting)
   Future<void> saveUser(String uid, String name, String email) async {
     try {
-      await _db.collection('users').doc(uid).set({
-        'uid': uid,
-        'fullName': name,
-        'email': email,
-        'createdAt': FieldValue.serverTimestamp(),
-        'emergencyContacts': [],
-      });
+      final userDoc = _db.collection('users').doc(uid);
+      final snapshot = await userDoc.get();
+
+      // ONLY create a new document if the user DOES NOT exist yet
+      if (!snapshot.exists) {
+        await userDoc.set({
+          'uid': uid,
+          'fullName': name,
+          'email': email,
+          'phone': '',
+          'location': '',
+          'createdAt': FieldValue.serverTimestamp(),
+          'emergencyContacts': [],
+        });
+      }
+      // If snapshot.exists is true, we do NOTHING.
+      // This preserves your phone/location data on future logins.
     } catch (e) {
       print("Error saving user: $e");
     }
   }
 
-  // NEW: Get user data by UID
+  // ... keep getUser and updateUserProfile the same ...
   Future<Map<String, dynamic>?> getUser(String uid) async {
     try {
       DocumentSnapshot doc = await _db.collection('users').doc(uid).get();
@@ -29,6 +39,15 @@ class DatabaseService {
     } catch (e) {
       print("Error fetching user: $e");
       return null;
+    }
+  }
+
+  Future<void> updateUserProfile(String uid, Map<String, dynamic> data) async {
+    try {
+      await _db.collection('users').doc(uid).update(data);
+    } catch (e) {
+      print("Error updating profile: $e");
+      throw e;
     }
   }
 }
