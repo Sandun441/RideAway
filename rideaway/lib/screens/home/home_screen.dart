@@ -6,32 +6,33 @@ class HomeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F7FA),
+      backgroundColor: theme.scaffoldBackgroundColor,
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(20),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              /// Header
+              /// HEADER
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
-                    children: const [
+                    children: [
                       Text(
                         "Good morning, Alex",
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
+                        style: theme.textTheme.titleMedium
+                            ?.copyWith(fontWeight: FontWeight.bold),
                       ),
-                      SizedBox(height: 4),
+                      const SizedBox(height: 4),
                       Text(
                         "Stay safe on your ride",
-                        style: TextStyle(color: Colors.grey),
+                        style: theme.textTheme.bodySmall,
                       ),
                     ],
                   ),
@@ -40,75 +41,75 @@ class HomeScreen extends StatelessWidget {
                       IconButton(
                         icon: const Icon(Icons.settings_outlined),
                         onPressed: () {
-                          Navigator.of(context).pushNamed(AppRoutes.settings);
+                          Navigator.pushNamed(context, AppRoutes.settings);
                         },
                       ),
                       const SizedBox(width: 12),
-                      GestureDetector(
+                      InkWell(
                         onTap: () {
-                          Navigator.of(context).pushNamed(AppRoutes.profile);
+                          Navigator.pushNamed(context, AppRoutes.profile);
                         },
-                        child: const CircleAvatar(
-                          radius: 16,
-                          child: Icon(Icons.person, size: 18),
+                        borderRadius: BorderRadius.circular(20),
+                        child: CircleAvatar(
+                          radius: 18,
+                          backgroundColor: colors.primaryContainer,
+                          child: Icon(
+                            Icons.person,
+                            size: 18,
+                            color: colors.onPrimaryContainer,
+                          ),
                         ),
                       ),
                     ],
-
                   ),
                 ],
               ),
 
-              const SizedBox(height: 25),
+              const SizedBox(height: 24),
 
-              /// Safety Status Card
+              /// SAFETY STATUS
               _card(
+                context,
                 child: Column(
                   children: [
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        const Text(
+                        Text(
                           "Safety Status",
-                          style: TextStyle(fontWeight: FontWeight.w600),
+                          style: theme.textTheme.titleSmall
+                              ?.copyWith(fontWeight: FontWeight.w600),
                         ),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 10, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: Colors.grey.shade200,
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          child: const Text(
-                            "Inactive",
-                            style: TextStyle(fontSize: 12),
-                          ),
-                        ),
+                        _statusChip("Inactive", colors),
                       ],
                     ),
                     const SizedBox(height: 20),
-                    const CircleAvatar(
-                      radius: 36,
-                      backgroundColor: Color(0xFFEFF2F6),
-                      child: Icon(Icons.shield_outlined,
-                          size: 36, color: Colors.grey),
+                    CircleAvatar(
+                      radius: 38,
+                      backgroundColor: colors.primary.withOpacity(0.15),
+                      child: Icon(
+                        Icons.shield_outlined,
+                        size: 38,
+                        color: colors.primary,
+                      ),
                     ),
                     const SizedBox(height: 20),
                     SizedBox(
                       width: double.infinity,
-                      height: 46,
+                      height: 48,
                       child: ElevatedButton.icon(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: colors.primary,
+                          foregroundColor: colors.onPrimary,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
                         onPressed: () {
                           Navigator.pushNamed(context, AppRoutes.accident);
                         },
                         icon: const Icon(Icons.play_arrow),
                         label: const Text("Start Monitoring"),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.green,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                        ),
                       ),
                     ),
                   ],
@@ -117,14 +118,16 @@ class HomeScreen extends StatelessWidget {
 
               const SizedBox(height: 20),
 
-              /// Last Ride Summary
+              /// LAST RIDE SUMMARY
               _card(
+                context,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
+                    Text(
                       "Last Ride Summary",
-                      style: TextStyle(fontWeight: FontWeight.w600),
+                      style: theme.textTheme.titleSmall
+                          ?.copyWith(fontWeight: FontWeight.w600),
                     ),
                     const SizedBox(height: 16),
                     Row(
@@ -134,19 +137,16 @@ class HomeScreen extends StatelessWidget {
                           icon: Icons.timer,
                           label: "Duration",
                           value: "1h 23m",
-                          color: Colors.blue,
                         ),
                         _SummaryItem(
                           icon: Icons.location_on,
                           label: "Distance",
                           value: "15.2 km",
-                          color: Colors.green,
                         ),
                         _SummaryItem(
-                          icon: Icons.monitor_heart,
+                          icon: Icons.favorite,
                           label: "Status",
                           value: "Safe",
-                          color: Colors.purple,
                         ),
                       ],
                     ),
@@ -156,33 +156,35 @@ class HomeScreen extends StatelessWidget {
 
               const SizedBox(height: 20),
 
-              /// Quick Actions
+              /// QUICK ACTIONS
               _card(
+                context,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
+                    Text(
                       "Quick Actions",
-                      style: TextStyle(fontWeight: FontWeight.w600),
+                      style: theme.textTheme.titleSmall
+                          ?.copyWith(fontWeight: FontWeight.w600),
                     ),
                     const SizedBox(height: 16),
                     Row(
                       children: [
                         _quickButton(
+                          context,
                           icon: Icons.people_outline,
                           label: "Contacts",
                           onTap: () {
                             Navigator.pushNamed(context, AppRoutes.contacts);
-
                           },
                         ),
                         const SizedBox(width: 12),
                         _quickButton(
+                          context,
                           icon: Icons.history,
                           label: "History",
                           onTap: () {
-                            Navigator.pushNamed(
-                                context, AppRoutes.history);
+                            Navigator.pushNamed(context, AppRoutes.history);
                           },
                         ),
                       ],
@@ -193,16 +195,19 @@ class HomeScreen extends StatelessWidget {
 
               const SizedBox(height: 20),
 
-              /// Emergency Info
+              /// EMERGENCY INFO
               Container(
                 padding: const EdgeInsets.all(14),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFFFF3E0),
+                  color: colors.errorContainer,
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: const Text(
-                  "Emergency: If you need immediate help, press and hold the power button 3 times.",
-                  style: TextStyle(color: Colors.deepOrange),
+                child: Text(
+                  "Emergency: Press and hold the power button 3 times for immediate help.",
+                  style: TextStyle(
+                    color: colors.onErrorContainer,
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
               ),
             ],
@@ -212,17 +217,18 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
-  /// Reusable Card
-  Widget _card({required Widget child}) {
+  /// CARD
+  Widget _card(BuildContext context, {required Widget child}) {
+    final theme = Theme.of(context);
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: theme.cardColor,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withOpacity(0.06),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -232,12 +238,34 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
-  /// Quick Action Button
-  Widget _quickButton({
+  /// STATUS CHIP
+  Widget _statusChip(String text, ColorScheme colors) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: colors.secondaryContainer,
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Text(
+        text,
+        style: TextStyle(
+          color: colors.onSecondaryContainer,
+          fontWeight: FontWeight.w500,
+        ),
+      ),
+    );
+  }
+
+  /// QUICK BUTTON
+  Widget _quickButton(
+    BuildContext context, {
     required IconData icon,
     required String label,
     required VoidCallback onTap,
   }) {
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+
     return Expanded(
       child: InkWell(
         onTap: onTap,
@@ -245,14 +273,14 @@ class HomeScreen extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.symmetric(vertical: 14),
           decoration: BoxDecoration(
-            border: Border.all(color: Colors.grey.shade300),
+            border: Border.all(color: colors.outline),
             borderRadius: BorderRadius.circular(12),
           ),
           child: Column(
             children: [
-              Icon(icon),
+              Icon(icon, color: colors.primary),
               const SizedBox(height: 6),
-              Text(label),
+              Text(label, style: theme.textTheme.bodyMedium),
             ],
           ),
         ),
@@ -261,34 +289,36 @@ class HomeScreen extends StatelessWidget {
   }
 }
 
-/// Summary Item Widget
+/// SUMMARY ITEM
 class _SummaryItem extends StatelessWidget {
   final IconData icon;
   final String label;
   final String value;
-  final Color color;
 
   const _SummaryItem({
     required this.icon,
     required this.label,
     required this.value,
-    required this.color,
   });
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+
     return Column(
       children: [
         CircleAvatar(
-          backgroundColor: color.withOpacity(0.15),
-          child: Icon(icon, color: color),
+          backgroundColor: colors.primary.withOpacity(0.15),
+          child: Icon(icon, color: colors.primary),
         ),
         const SizedBox(height: 8),
-        Text(label, style: const TextStyle(fontSize: 12)),
+        Text(label, style: theme.textTheme.bodySmall),
         const SizedBox(height: 4),
         Text(
           value,
-          style: const TextStyle(fontWeight: FontWeight.bold),
+          style:
+              theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.bold),
         ),
       ],
     );

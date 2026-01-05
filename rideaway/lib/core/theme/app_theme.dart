@@ -1,16 +1,25 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
-import '../constants/colors.dart';
 
 class AppTheme {
   static ThemeData lightTheme = ThemeData(
-    primaryColor: AppColors.primary,
-    scaffoldBackgroundColor: AppColors.background,
-    textTheme: GoogleFonts.interTextTheme(),
+    brightness: Brightness.light,
+    primarySwatch: Colors.blue,
+    scaffoldBackgroundColor: Colors.white,
     appBarTheme: const AppBarTheme(
-      elevation: 0,
       backgroundColor: Colors.white,
-      foregroundColor: Colors.black,
+      foregroundColor: Color.fromARGB(255, 233, 206, 206),
+      elevation: 0,
+    ),
+  );
+
+  static ThemeData darkTheme = ThemeData(
+    brightness: Brightness.dark,
+    primarySwatch: Colors.blue,
+    scaffoldBackgroundColor: const Color.fromARGB(255, 216, 91, 91),
+    appBarTheme: const AppBarTheme(
+      backgroundColor: Color.fromARGB(255, 133, 105, 105),
+      foregroundColor: Colors.white,
+      elevation: 0,
     ),
   );
 }
