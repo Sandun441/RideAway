@@ -8,6 +8,7 @@ class HomeScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
+    final isDark = theme.brightness == Brightness.dark;
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
@@ -26,8 +27,9 @@ class HomeScreen extends StatelessWidget {
                     children: [
                       Text(
                         "Good morning, Alex",
-                        style: theme.textTheme.titleMedium
-                            ?.copyWith(fontWeight: FontWeight.bold),
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                       const SizedBox(height: 4),
                       Text(
@@ -39,7 +41,10 @@ class HomeScreen extends StatelessWidget {
                   Row(
                     children: [
                       IconButton(
-                        icon: const Icon(Icons.settings_outlined),
+                        icon: Icon(
+                          Icons.settings_outlined,
+                          color: theme.iconTheme.color,
+                        ),
                         onPressed: () {
                           Navigator.pushNamed(context, AppRoutes.settings);
                         },
@@ -52,11 +57,15 @@ class HomeScreen extends StatelessWidget {
                         borderRadius: BorderRadius.circular(20),
                         child: CircleAvatar(
                           radius: 18,
-                          backgroundColor: colors.primaryContainer,
+                          backgroundColor: isDark
+                              ? colors.surfaceVariant
+                              : colors.primaryContainer,
                           child: Icon(
                             Icons.person,
                             size: 18,
-                            color: colors.onPrimaryContainer,
+                            color: isDark
+                                ? colors.onSurfaceVariant
+                                : colors.onPrimaryContainer,
                           ),
                         ),
                       ),
@@ -77,20 +86,28 @@ class HomeScreen extends StatelessWidget {
                       children: [
                         Text(
                           "Safety Status",
-                          style: theme.textTheme.titleSmall
-                              ?.copyWith(fontWeight: FontWeight.w600),
+                          style: theme.textTheme.titleSmall?.copyWith(
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
-                        _statusChip("Inactive", colors),
+                        _statusChip(
+                          "Inactive",
+                          isDark ? Colors.grey : colors.primary,
+                        ),
                       ],
                     ),
                     const SizedBox(height: 20),
                     CircleAvatar(
                       radius: 38,
-                      backgroundColor: colors.primary.withOpacity(0.15),
+                      backgroundColor: isDark
+                          ? colors.surfaceVariant
+                          : colors.primary.withOpacity(0.12),
                       child: Icon(
                         Icons.shield_outlined,
-                        size: 38,
-                        color: colors.primary,
+                        size: 36,
+                        color: isDark
+                            ? colors.onSurfaceVariant
+                            : colors.primary,
                       ),
                     ),
                     const SizedBox(height: 20),
@@ -99,7 +116,9 @@ class HomeScreen extends StatelessWidget {
                       height: 48,
                       child: ElevatedButton.icon(
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: colors.primary,
+                          backgroundColor: isDark
+                              ? colors.primary
+                              : colors.primary,
                           foregroundColor: colors.onPrimary,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12),
@@ -126,8 +145,9 @@ class HomeScreen extends StatelessWidget {
                   children: [
                     Text(
                       "Last Ride Summary",
-                      style: theme.textTheme.titleSmall
-                          ?.copyWith(fontWeight: FontWeight.w600),
+                      style: theme.textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                     const SizedBox(height: 16),
                     Row(
@@ -164,8 +184,9 @@ class HomeScreen extends StatelessWidget {
                   children: [
                     Text(
                       "Quick Actions",
-                      style: theme.textTheme.titleSmall
-                          ?.copyWith(fontWeight: FontWeight.w600),
+                      style: theme.textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                     const SizedBox(height: 16),
                     Row(
@@ -199,13 +220,17 @@ class HomeScreen extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(14),
                 decoration: BoxDecoration(
-                  color: colors.errorContainer,
+                  color: isDark
+                      ? Colors.red.withOpacity(0.15)
+                      : colors.errorContainer,
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Text(
                   "Emergency: Press and hold the power button 3 times for immediate help.",
                   style: TextStyle(
-                    color: colors.onErrorContainer,
+                    color: isDark
+                        ? Colors.red.shade200
+                        : colors.onErrorContainer,
                     fontWeight: FontWeight.w500,
                   ),
                 ),
@@ -228,8 +253,8 @@ class HomeScreen extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.06),
-            blurRadius: 10,
+            color: Colors.black.withOpacity(0.08),
+            blurRadius: 8,
             offset: const Offset(0, 4),
           ),
         ],
@@ -239,32 +264,29 @@ class HomeScreen extends StatelessWidget {
   }
 
   /// STATUS CHIP
-  Widget _statusChip(String text, ColorScheme colors) {
+  Widget _statusChip(String text, Color color) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
-        color: colors.secondaryContainer,
+        color: color.withOpacity(0.15),
         borderRadius: BorderRadius.circular(20),
       ),
       child: Text(
         text,
-        style: TextStyle(
-          color: colors.onSecondaryContainer,
-          fontWeight: FontWeight.w500,
-        ),
+        style: TextStyle(color: color, fontWeight: FontWeight.w500),
       ),
     );
   }
 
-  /// QUICK BUTTON
+  /// QUICK BUTTON (MINIMAL ICONS)
   Widget _quickButton(
-      BuildContext context, {
-        required IconData icon,
-        required String label,
-        required VoidCallback onTap,
-      }) {
+    BuildContext context, {
+    required IconData icon,
+    required String label,
+    required VoidCallback onTap,
+  }) {
     final theme = Theme.of(context);
-    final colors = theme.colorScheme;
+    final isDark = theme.brightness == Brightness.dark;
 
     return Expanded(
       child: InkWell(
@@ -273,12 +295,17 @@ class HomeScreen extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.symmetric(vertical: 14),
           decoration: BoxDecoration(
-            border: Border.all(color: colors.outline),
+            border: Border.all(
+              color: isDark ? Colors.grey.shade700 : Colors.grey.shade300,
+            ),
             borderRadius: BorderRadius.circular(12),
           ),
           child: Column(
             children: [
-              Icon(icon, color: colors.primary),
+              Icon(
+                icon,
+                color: isDark ? Colors.grey.shade300 : Colors.grey.shade700,
+              ),
               const SizedBox(height: 6),
               Text(label, style: theme.textTheme.bodyMedium),
             ],
@@ -289,7 +316,7 @@ class HomeScreen extends StatelessWidget {
   }
 }
 
-/// SUMMARY ITEM
+/// SUMMARY ITEM (SUBTLE ICONS)
 class _SummaryItem extends StatelessWidget {
   final IconData icon;
   final String label;
@@ -304,21 +331,25 @@ class _SummaryItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final colors = theme.colorScheme;
+    final isDark = theme.brightness == Brightness.dark;
 
     return Column(
       children: [
         CircleAvatar(
-          backgroundColor: colors.primary.withOpacity(0.15),
-          child: Icon(icon, color: colors.primary),
+          backgroundColor: isDark ? Colors.grey.shade800 : Colors.grey.shade200,
+          child: Icon(
+            icon,
+            color: isDark ? Colors.grey.shade300 : Colors.grey.shade700,
+          ),
         ),
         const SizedBox(height: 8),
         Text(label, style: theme.textTheme.bodySmall),
         const SizedBox(height: 4),
         Text(
           value,
-          style: theme.textTheme.bodyMedium
-              ?.copyWith(fontWeight: FontWeight.bold),
+          style: theme.textTheme.bodyMedium?.copyWith(
+            fontWeight: FontWeight.bold,
+          ),
         ),
       ],
     );
