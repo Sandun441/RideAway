@@ -22,12 +22,11 @@ class _AddContactDialogState extends State<AddContactDialog> {
   @override
   void initState() {
     super.initState();
-    _nameController =
-        TextEditingController(text: widget.contact?.name ?? '');
-    _phoneController =
-        TextEditingController(text: widget.contact?.phone ?? '');
-    _relationController =
-        TextEditingController(text: widget.contact?.relation ?? '');
+    _nameController = TextEditingController(text: widget.contact?.name ?? '');
+    _phoneController = TextEditingController(text: widget.contact?.phone ?? '');
+    _relationController = TextEditingController(
+      text: widget.contact?.relation ?? '',
+    );
   }
 
   @override
@@ -42,7 +41,7 @@ class _AddContactDialogState extends State<AddContactDialog> {
     if (_nameController.text.isEmpty ||
         _phoneController.text.isEmpty ||
         _relationController.text.isEmpty) {
-      _showSnack("All fields required");
+      _showSnack("All fields are required");
       return;
     }
 
@@ -71,48 +70,135 @@ class _AddContactDialogState extends State<AddContactDialog> {
 
   @override
   Widget build(BuildContext context) {
-    return AlertDialog(
-      title:
-      Text(widget.contact == null ? "Add Contact" : "Edit Contact"),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          TextField(
-            controller: _nameController,
-            decoration: const InputDecoration(labelText: "Name"),
-          ),
-          TextField(
-            controller: _phoneController,
-            decoration: const InputDecoration(labelText: "Phone"),
-            keyboardType: TextInputType.phone,
-          ),
-          TextField(
-            controller: _relationController,
-            decoration: const InputDecoration(labelText: "Relation"),
-          ),
-        ],
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final colors = theme.colorScheme;
+
+    return Dialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+      backgroundColor: theme.cardColor,
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            /// HEADER
+            Row(
+              children: [
+                CircleAvatar(
+                  backgroundColor: colors.primary.withOpacity(0.15),
+                  child: Icon(Icons.person_add_outlined, color: colors.primary),
+                ),
+                const SizedBox(width: 12),
+                Text(
+                  widget.contact == null
+                      ? "Add Emergency Contact"
+                      : "Edit Contact",
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 20),
+
+            /// NAME
+            _inputField(
+              context,
+              controller: _nameController,
+              label: "Name",
+              icon: Icons.person_outline,
+            ),
+
+            const SizedBox(height: 14),
+
+            /// PHONE
+            _inputField(
+              context,
+              controller: _phoneController,
+              label: "Phone Number",
+              icon: Icons.phone_outlined,
+              keyboardType: TextInputType.phone,
+            ),
+
+            const SizedBox(height: 14),
+
+            /// RELATION
+            _inputField(
+              context,
+              controller: _relationController,
+              label: "Relation",
+              icon: Icons.group_outlined,
+            ),
+
+            const SizedBox(height: 24),
+
+            /// ACTION BUTTONS
+            Row(
+              children: [
+                Expanded(
+                  child: TextButton(
+                    onPressed: isLoading ? null : () => Navigator.pop(context),
+                    child: const Text("Cancel"),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: isLoading ? null : _saveContact,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: colors.primary,
+                      foregroundColor: colors.onPrimary,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                    child: isLoading
+                        ? const SizedBox(
+                            height: 18,
+                            width: 18,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Text("Save"),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
-      actions: [
-        TextButton(
-          onPressed: isLoading ? null : () => Navigator.pop(context),
-          child: const Text("Cancel"),
+    );
+  }
+
+  /// INPUT FIELD (THEME AWARE)
+  Widget _inputField(
+    BuildContext context, {
+    required TextEditingController controller,
+    required String label,
+    required IconData icon,
+    TextInputType keyboardType = TextInputType.text,
+  }) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
+    return TextField(
+      controller: controller,
+      keyboardType: keyboardType,
+      decoration: InputDecoration(
+        labelText: label,
+        prefixIcon: Icon(icon),
+        filled: true,
+        fillColor: isDark ? Colors.grey.shade800 : Colors.grey.shade100,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide.none,
         ),
-        ElevatedButton(
-          onPressed: isLoading ? null : _saveContact,
-          child: isLoading
-              ? const SizedBox(
-            height: 18,
-            width: 18,
-            child: CircularProgressIndicator(strokeWidth: 2),
-          )
-              : const Text("Save"),
-        ),
-      ],
+      ),
     );
   }
 
   void _showSnack(String msg) {
-    ScaffoldMessenger.of(context)
-        .showSnackBar(SnackBar(content: Text(msg)));
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
   }
 }

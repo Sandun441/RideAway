@@ -5,8 +5,10 @@ class ProfileScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F7FA),
+      backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
         title: const Text("Profile"),
         leading: IconButton(
@@ -14,10 +16,7 @@ class ProfileScreen extends StatelessWidget {
           onPressed: () => Navigator.pop(context),
         ),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.edit_outlined),
-            onPressed: () {},
-          ),
+          IconButton(icon: const Icon(Icons.edit_outlined), onPressed: () {}),
         ],
       ),
       body: SingleChildScrollView(
@@ -26,14 +25,15 @@ class ProfileScreen extends StatelessWidget {
           children: [
             /// Profile Card
             _card(
+              context,
               child: Column(
                 children: [
                   Row(
                     children: [
-                      const CircleAvatar(
+                      CircleAvatar(
                         radius: 28,
-                        backgroundColor: Colors.blue,
-                        child: Text(
+                        backgroundColor: theme.colorScheme.primary,
+                        child: const Text(
                           "AJ",
                           style: TextStyle(
                             color: Colors.white,
@@ -47,29 +47,33 @@ class ProfileScreen extends StatelessWidget {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Text(
+                            Text(
                               "Alex Johnson",
-                              style: TextStyle(
-                                  fontSize: 16, fontWeight: FontWeight.bold),
+                              style: theme.textTheme.bodyLarge?.copyWith(
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
                             const SizedBox(height: 4),
-                            const Text(
+                            Text(
                               "Cycling enthusiast since 2020",
-                              style:
-                              TextStyle(fontSize: 12, color: Colors.grey),
+                              style: theme.textTheme.bodySmall,
                             ),
                             const SizedBox(height: 6),
                             Container(
                               padding: const EdgeInsets.symmetric(
-                                  horizontal: 8, vertical: 4),
+                                horizontal: 8,
+                                vertical: 4,
+                              ),
                               decoration: BoxDecoration(
-                                color: Colors.green.shade100,
+                                color: Colors.green.withOpacity(0.15),
                                 borderRadius: BorderRadius.circular(20),
                               ),
                               child: const Text(
                                 "Verified Rider",
                                 style: TextStyle(
-                                    fontSize: 12, color: Colors.green),
+                                  fontSize: 12,
+                                  color: Colors.green,
+                                ),
                               ),
                             ),
                           ],
@@ -78,10 +82,17 @@ class ProfileScreen extends StatelessWidget {
                     ],
                   ),
                   const SizedBox(height: 16),
-                  _infoRow(Icons.email_outlined,
-                      "alex.johnson@email.com"),
-                  _infoRow(Icons.phone_outlined, "+1 (555) 123-4567"),
-                  _infoRow(Icons.location_on_outlined, "San Francisco, CA"),
+                  _infoRow(
+                    context,
+                    Icons.email_outlined,
+                    "alex.johnson@email.com",
+                  ),
+                  _infoRow(context, Icons.phone_outlined, "+1 (555) 123-4567"),
+                  _infoRow(
+                    context,
+                    Icons.location_on_outlined,
+                    "San Francisco, CA",
+                  ),
                 ],
               ),
             ),
@@ -90,20 +101,26 @@ class ProfileScreen extends StatelessWidget {
 
             /// Riding Statistics
             _card(
+              context,
               title: "Riding Statistics",
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: const [
                   _StatItem(
-                      value: "47", label: "Total Rides", color: Colors.blue),
+                    value: "47",
+                    label: "Total Rides",
+                    color: Colors.blue,
+                  ),
                   _StatItem(
-                      value: "342 km",
-                      label: "Distance",
-                      color: Colors.green),
+                    value: "342 km",
+                    label: "Distance",
+                    color: Colors.green,
+                  ),
                   _StatItem(
-                      value: "98%",
-                      label: "Safety Score",
-                      color: Colors.purple),
+                    value: "98%",
+                    label: "Safety Score",
+                    color: Colors.purple,
+                  ),
                 ],
               ),
             ),
@@ -112,15 +129,13 @@ class ProfileScreen extends StatelessWidget {
 
             /// Safety Features
             _card(
+              context,
               title: "Safety Features",
               child: Column(
                 children: [
-                  _featureTile(
-                      "Accident Detection", "Enabled", Colors.green),
-                  _featureTile(
-                      "Location Sharing", "Active", Colors.blue),
-                  _featureTile(
-                      "Emergency Contacts", "Configured", Colors.grey),
+                  _featureTile("Accident Detection", "Enabled", Colors.green),
+                  _featureTile("Location Sharing", "Active", Colors.blue),
+                  _featureTile("Emergency Contacts", "Configured", Colors.grey),
                 ],
               ),
             ),
@@ -129,6 +144,7 @@ class ProfileScreen extends StatelessWidget {
 
             /// Account
             _card(
+              context,
               title: "Account",
               child: Column(
                 children: const [
@@ -151,14 +167,18 @@ class ProfileScreen extends StatelessWidget {
             const SizedBox(height: 20),
 
             /// Footer
-            const Column(
+            Column(
               children: [
-                Text("Smart Ride Safety",
-                    style: TextStyle(fontWeight: FontWeight.bold)),
-                SizedBox(height: 4),
+                Text(
+                  "Smart Ride Safety",
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 4),
                 Text(
                   "Version 1.2.3 · Terms · Privacy",
-                  style: TextStyle(fontSize: 12, color: Colors.grey),
+                  style: theme.textTheme.bodySmall,
                 ),
               ],
             ),
@@ -170,9 +190,7 @@ class ProfileScreen extends StatelessWidget {
               width: double.infinity,
               height: 46,
               child: OutlinedButton.icon(
-                onPressed: () {
-                  Navigator.pop(context);
-                },
+                onPressed: () => Navigator.pop(context),
                 icon: const Icon(Icons.logout, color: Colors.red),
                 label: const Text(
                   "Sign Out",
@@ -192,13 +210,15 @@ class ProfileScreen extends StatelessWidget {
     );
   }
 
-  /// Reusable Card
-  Widget _card({String? title, required Widget child}) {
+  /// Reusable Card (THEME AWARE)
+  Widget _card(BuildContext context, {String? title, required Widget child}) {
+    final theme = Theme.of(context);
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: theme.cardColor,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
@@ -212,8 +232,12 @@ class ProfileScreen extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           if (title != null) ...[
-            Text(title,
-                style: const TextStyle(fontWeight: FontWeight.bold)),
+            Text(
+              title,
+              style: theme.textTheme.bodyLarge?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
+            ),
             const SizedBox(height: 12),
           ],
           child,
@@ -222,14 +246,16 @@ class ProfileScreen extends StatelessWidget {
     );
   }
 
-  Widget _infoRow(IconData icon, String text) {
+  Widget _infoRow(BuildContext context, IconData icon, String text) {
+    final theme = Theme.of(context);
+
     return Padding(
       padding: const EdgeInsets.only(bottom: 6),
       child: Row(
         children: [
-          Icon(icon, size: 18, color: Colors.grey),
+          Icon(icon, size: 18, color: theme.iconTheme.color),
           const SizedBox(width: 8),
-          Text(text),
+          Text(text, style: theme.textTheme.bodyMedium),
         ],
       ),
     );
@@ -250,15 +276,20 @@ class _StatItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Column(
       children: [
-        Text(value,
-            style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: color)),
+        Text(
+          value,
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            color: color,
+          ),
+        ),
         const SizedBox(height: 4),
-        Text(label, style: const TextStyle(fontSize: 12)),
+        Text(label, style: theme.textTheme.bodySmall),
       ],
     );
   }
@@ -279,10 +310,7 @@ Widget _featureTile(String title, String status, Color color) {
         color: color.withOpacity(0.15),
         borderRadius: BorderRadius.circular(20),
       ),
-      child: Text(
-        status,
-        style: TextStyle(color: color, fontSize: 12),
-      ),
+      child: Text(status, style: TextStyle(color: color, fontSize: 12)),
     ),
   );
 }
