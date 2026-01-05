@@ -5,10 +5,8 @@ class RideHistoryScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
     return Scaffold(
-      backgroundColor: theme.scaffoldBackgroundColor,
+      backgroundColor: const Color(0xFFF5F7FA),
       appBar: AppBar(
         title: const Text("Ride History"),
         leading: IconButton(
@@ -21,41 +19,46 @@ class RideHistoryScreen extends StatelessWidget {
         child: Column(
           children: [
             /// Filter
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12),
-              decoration: BoxDecoration(
-                color: theme.cardColor,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: DropdownButtonHideUnderline(
-                child: DropdownButton<String>(
-                  value: "All Rides",
-                  dropdownColor: theme.cardColor,
-                  items: const [
-                    DropdownMenuItem(
-                        value: "All Rides", child: Text("All Rides")),
-                    DropdownMenuItem(value: "Safe", child: Text("Safe")),
-                    DropdownMenuItem(value: "Alert", child: Text("Alert")),
-                    DropdownMenuItem(
-                        value: "Incident", child: Text("Incident")),
-                  ],
-                  onChanged: (value) {},
+            Row(
+              children: [
+                Expanded(
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: DropdownButtonHideUnderline(
+                      child: DropdownButton<String>(
+                        value: "All Rides",
+                        items: const [
+                          DropdownMenuItem(
+                              value: "All Rides", child: Text("All Rides")),
+                          DropdownMenuItem(
+                              value: "Safe", child: Text("Safe")),
+                          DropdownMenuItem(
+                              value: "Alert", child: Text("Alert")),
+                          DropdownMenuItem(
+                              value: "Incident", child: Text("Incident")),
+                        ],
+                        onChanged: (value) {},
+                      ),
+                    ),
+                  ),
                 ),
-              ),
+              ],
             ),
 
             const SizedBox(height: 20),
 
             /// Monthly Summary
             _card(
-              context,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
+                  const Text(
                     "This Month Summary",
-                    style: theme.textTheme.titleMedium
-                        ?.copyWith(fontWeight: FontWeight.bold),
+                    style: TextStyle(fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 16),
                   Row(
@@ -70,7 +73,9 @@ class RideHistoryScreen extends StatelessWidget {
                           label: "km Traveled",
                           color: Colors.green),
                       _SummaryStat(
-                          value: "1", label: "Alert Sent", color: Colors.red),
+                          value: "1",
+                          label: "Alert Sent",
+                          color: Colors.red),
                     ],
                   ),
                 ],
@@ -79,8 +84,8 @@ class RideHistoryScreen extends StatelessWidget {
 
             const SizedBox(height: 20),
 
+            /// Ride Cards
             _rideCard(
-              context,
               title: "Downtown Park Trail",
               date: "Today • 2:15 PM",
               status: "Safe",
@@ -91,7 +96,6 @@ class RideHistoryScreen extends StatelessWidget {
             ),
 
             _rideCard(
-              context,
               title: "River Path",
               date: "Yesterday • 6:30 AM",
               status: "Alert",
@@ -99,11 +103,11 @@ class RideHistoryScreen extends StatelessWidget {
               duration: "45m",
               distance: "8.7 km",
               speed: "11.6 mph",
-              warning: "Potential incident detected but cancelled by user",
+              warning:
+              "Potential incident detected but cancelled by user",
             ),
 
             _rideCard(
-              context,
               title: "Mountain Trail Loop",
               date: "Sep 20 • 3:45 PM",
               status: "Safe",
@@ -114,7 +118,6 @@ class RideHistoryScreen extends StatelessWidget {
             ),
 
             _rideCard(
-              context,
               title: "City Commute",
               date: "Sep 19 • 7:15 AM",
               status: "Incident",
@@ -122,11 +125,11 @@ class RideHistoryScreen extends StatelessWidget {
               duration: "1h 12m",
               distance: "12.8 km",
               speed: "10.7 mph",
-              warning: "Emergency alert was sent to your contacts at 7:41 PM",
+              warning:
+              "Emergency alert was sent to your contacts at 7:41 PM",
             ),
 
             _rideCard(
-              context,
               title: "Coastal Route",
               date: "Sep 18 • 5:20 PM",
               status: "Safe",
@@ -138,6 +141,7 @@ class RideHistoryScreen extends StatelessWidget {
 
             const SizedBox(height: 10),
 
+            /// Load More
             SizedBox(
               width: double.infinity,
               child: OutlinedButton(
@@ -151,9 +155,8 @@ class RideHistoryScreen extends StatelessWidget {
     );
   }
 
-  /// Ride Card (THEME AWARE)
-  Widget _rideCard(
-    BuildContext context, {
+  /// Ride Card
+  Widget _rideCard({
     required String title,
     required String date,
     required String status,
@@ -163,13 +166,11 @@ class RideHistoryScreen extends StatelessWidget {
     required String speed,
     String? warning,
   }) {
-    final theme = Theme.of(context);
-
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: theme.cardColor,
+        color: Colors.white,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
@@ -190,17 +191,17 @@ class RideHistoryScreen extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(title,
-                      style: theme.textTheme.bodyLarge
-                          ?.copyWith(fontWeight: FontWeight.bold)),
+                      style: const TextStyle(
+                          fontWeight: FontWeight.bold, fontSize: 15)),
                   const SizedBox(height: 4),
                   Text(date,
-                      style: theme.textTheme.bodySmall
-                          ?.copyWith(color: Colors.grey)),
+                      style:
+                      const TextStyle(fontSize: 12, color: Colors.grey)),
                 ],
               ),
               Container(
                 padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
                   color: statusColor.withOpacity(0.15),
                   borderRadius: BorderRadius.circular(20),
@@ -222,9 +223,9 @@ class RideHistoryScreen extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              _rideStat(context, "Duration", duration),
-              _rideStat(context, "Distance", distance),
-              _rideStat(context, "Avg Speed", speed),
+              _rideStat("Duration", duration),
+              _rideStat("Distance", distance),
+              _rideStat("Avg Speed", speed),
             ],
           ),
 
@@ -233,13 +234,13 @@ class RideHistoryScreen extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: theme.colorScheme.error.withOpacity(0.1),
+                color: Colors.red.shade50,
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Text(
                 warning,
-                style: theme.textTheme.bodySmall
-                    ?.copyWith(color: theme.colorScheme.error),
+                style:
+                const TextStyle(color: Colors.red, fontSize: 12),
               ),
             ),
           ],
@@ -248,29 +249,25 @@ class RideHistoryScreen extends StatelessWidget {
     );
   }
 
-  Widget _rideStat(BuildContext context, String label, String value) {
-    final theme = Theme.of(context);
-
+  Widget _rideStat(String label, String value) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(label,
-            style: theme.textTheme.bodySmall?.copyWith(color: Colors.grey)),
+            style: const TextStyle(fontSize: 12, color: Colors.grey)),
         const SizedBox(height: 4),
         Text(value,
-            style: theme.textTheme.bodyMedium
-                ?.copyWith(fontWeight: FontWeight.bold)),
+            style: const TextStyle(fontWeight: FontWeight.bold)),
       ],
     );
   }
 
-  Widget _card(BuildContext context, {required Widget child}) {
-    final theme = Theme.of(context);
-
+  /// Card
+  Widget _card({required Widget child}) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: theme.cardColor,
+        color: Colors.white,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
@@ -303,9 +300,11 @@ class _SummaryStat extends StatelessWidget {
       children: [
         Text(value,
             style: TextStyle(
-                fontSize: 18, fontWeight: FontWeight.bold, color: color)),
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: color)),
         const SizedBox(height: 4),
-        Text(label, style: Theme.of(context).textTheme.bodySmall),
+        Text(label, style: const TextStyle(fontSize: 12)),
       ],
     );
   }

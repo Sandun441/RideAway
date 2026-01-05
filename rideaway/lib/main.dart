@@ -1,32 +1,31 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_core/firebase_core.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-
-import 'firebase_options.dart';
+import 'package:firebase_core/firebase_core.dart'; // Add this import
+import 'firebase_options.dart'; // Add this import (auto-generated)
 
 import 'core/theme/app_theme.dart';
-import 'core/theme/theme_controller.dart';
 import 'routes/app_routes.dart';
 
+import 'screens/splash/splash_screen.dart';
+import 'screens/onboarding/onboarding_screen.dart';
 import 'screens/auth/login_screen.dart';
 import 'screens/home/home_screen.dart';
+import 'screens/accident/accident_detected_screen.dart';
+import 'screens/accident/alert_sent_screen.dart';
 import 'screens/contacts/contacts_screen.dart';
 import 'screens/settings/settings_screen.dart';
 import 'screens/history/ride_history_screen.dart';
 import 'screens/profile/profile_screen.dart';
 import 'screens/auth/RegistrationScreen.dart';
 
-Future<void> main() async {
+// Change main to async to support initialization
+void main() async {
+  // Ensure the framework is fully initialized
   WidgetsFlutterBinding.ensureInitialized();
 
+  // Initialize Firebase with the correct platform options
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
-
-  final auth = FirebaseAuth.instance;
-  if (auth.currentUser == null) {
-    await auth.signInAnonymously();
-  }
 
   runApp(const SmartRideApp());
 }

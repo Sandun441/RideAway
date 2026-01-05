@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../../core/theme/theme_controller.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -16,29 +15,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
   String countdown = "30 seconds";
   String theme = "Auto (System)";
 
-  String get sensitivityLabel => ["Low", "Medium", "High"][sensitivity.toInt()];
-
-  @override
-  void initState() {
-    super.initState();
-
-    // Sync dropdown with current theme
-    final mode = ThemeController.themeMode.value;
-    if (mode == ThemeMode.dark) {
-      theme = "Dark";
-    } else if (mode == ThemeMode.light) {
-      theme = "Light";
-    } else {
-      theme = "Auto (System)";
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
-    final themeData = Theme.of(context);
-
     return Scaffold(
-      backgroundColor: themeData.scaffoldBackgroundColor,
+      backgroundColor: const Color(0xFFF5F7FA),
       appBar: AppBar(
         title: const Text("Settings"),
         leading: IconButton(
@@ -52,19 +32,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
           children: [
             /// Detection Settings
             _card(
-              context,
               title: "Detection Settings",
               icon: Icons.shield_outlined,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _rowTitle(context, "Detection Sensitivity", sensitivityLabel),
+                  _rowTitle("Detection Sensitivity", "Medium"),
                   Slider(
                     value: sensitivity,
                     min: 0,
                     max: 2,
                     divisions: 2,
-                    label: sensitivityLabel,
+                    label: ["Low", "Medium", "High"][sensitivity.toInt()],
                     onChanged: (value) {
                       setState(() => sensitivity = value);
                     },
@@ -77,17 +56,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       Text("High"),
                     ],
                   ),
-                  const SizedBox(height: 8),
-                  Text(
+                  const SizedBox(height: 10),
+                  const Text(
                     "Higher sensitivity detects smaller impacts but may cause false alerts.",
-                    style: themeData.textTheme.bodySmall,
+                    style: TextStyle(fontSize: 12, color: Colors.grey),
                   ),
                   const SizedBox(height: 10),
                   _switchTile(
                     "GPS Location Tracking",
                     "Share location in emergency alerts",
                     gpsEnabled,
-                    (val) => setState(() => gpsEnabled = val),
+                        (val) => setState(() => gpsEnabled = val),
                   ),
                 ],
               ),
@@ -97,7 +76,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
             /// Notifications
             _card(
-              context,
               title: "Notifications",
               icon: Icons.notifications_outlined,
               child: Column(
@@ -106,26 +84,23 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     "Push Notifications",
                     "Receive app notifications",
                     pushNotifications,
-                    (val) => setState(() => pushNotifications = val),
+                        (val) => setState(() => pushNotifications = val),
                   ),
                   _switchTile(
                     "Vibration Alerts",
                     "Vibrate during accident detection",
                     vibrationAlerts,
-                    (val) => setState(() => vibrationAlerts = val),
+                        (val) => setState(() => vibrationAlerts = val),
                   ),
                   _dropdownTile(
                     "Emergency Countdown",
                     countdown,
                     ["15 seconds", "30 seconds", "60 seconds"],
-                    (val) => setState(() => countdown = val!),
+                        (val) => setState(() => countdown = val!),
                   ),
-                  Padding(
-                    padding: const EdgeInsets.only(left: 16, bottom: 8),
-                    child: Text(
-                      "Time before emergency contacts are notified",
-                      style: themeData.textTheme.bodySmall,
-                    ),
+                  const Text(
+                    "Time before emergency contacts are notified",
+                    style: TextStyle(fontSize: 12, color: Colors.grey),
                   ),
                 ],
               ),
@@ -135,24 +110,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
             /// Appearance
             _card(
-              context,
               title: "Appearance",
               icon: Icons.palette_outlined,
               child: _dropdownTile(
                 "Theme",
                 theme,
                 ["Auto (System)", "Light", "Dark"],
-                (val) {
-                  setState(() => theme = val!);
-
-                  if (val == "Light") {
-                    ThemeController.themeMode.value = ThemeMode.light;
-                  } else if (val == "Dark") {
-                    ThemeController.themeMode.value = ThemeMode.dark;
-                  } else {
-                    ThemeController.themeMode.value = ThemeMode.system;
-                  }
-                },
+                    (val) => setState(() => theme = val!),
               ),
             ),
 
@@ -160,7 +124,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
             /// Privacy & Legal
             _card(
-              context,
               title: "Privacy & Legal",
               icon: Icons.privacy_tip_outlined,
               child: Column(
@@ -184,18 +147,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
             const SizedBox(height: 30),
 
             /// Footer
-            Column(
+            const Column(
               children: [
-                Text(
-                  "Smart Ride Safety",
-                  style: themeData.textTheme.titleMedium
-                      ?.copyWith(fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  "Version 1.2.3",
-                  style: themeData.textTheme.bodySmall,
-                ),
+                Text("Smart Ride Safety",
+                    style: TextStyle(fontWeight: FontWeight.bold)),
+                SizedBox(height: 4),
+                Text("Version 1.2.3",
+                    style: TextStyle(fontSize: 12, color: Colors.grey)),
               ],
             ),
           ],
@@ -204,20 +162,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  /// Reusable widgets
-
-  Widget _card(
-    BuildContext context, {
+  /// Reusable Card
+  Widget _card({
     required String title,
     required IconData icon,
     required Widget child,
   }) {
-    final themeData = Theme.of(context);
-
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: themeData.cardColor,
+        color: Colors.white,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
@@ -232,13 +186,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
         children: [
           Row(
             children: [
-              Icon(icon, color: themeData.colorScheme.primary),
+              Icon(icon, color: Colors.blue),
               const SizedBox(width: 8),
-              Text(
-                title,
-                style: themeData.textTheme.titleMedium
-                    ?.copyWith(fontWeight: FontWeight.bold),
-              ),
+              Text(title,
+                  style: const TextStyle(fontWeight: FontWeight.bold)),
             ],
           ),
           const SizedBox(height: 12),
@@ -248,29 +199,23 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  Widget _rowTitle(BuildContext context, String left, String right) {
-    final themeData = Theme.of(context);
+  Widget _rowTitle(String left, String right) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(left,
-            style: themeData.textTheme.bodyMedium
-                ?.copyWith(fontWeight: FontWeight.w600)),
-        Text(right,
-            style:
-                themeData.textTheme.bodyMedium?.copyWith(color: Colors.blue)),
+        Text(left, style: const TextStyle(fontWeight: FontWeight.w600)),
+        Text(right, style: const TextStyle(color: Colors.blue)),
       ],
     );
   }
 
   Widget _switchTile(
-    String title,
-    String subtitle,
-    bool value,
-    Function(bool) onChanged,
-  ) {
+      String title,
+      String subtitle,
+      bool value,
+      Function(bool) onChanged,
+      ) {
     return SwitchListTile(
-      contentPadding: EdgeInsets.zero,
       title: Text(title),
       subtitle: Text(subtitle),
       value: value,
@@ -279,13 +224,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Widget _dropdownTile(
-    String title,
-    String value,
-    List<String> items,
-    Function(String?) onChanged,
-  ) {
+      String title,
+      String value,
+      List<String> items,
+      Function(String?) onChanged,
+      ) {
     return ListTile(
-      contentPadding: EdgeInsets.zero,
       title: Text(title),
       trailing: DropdownButton<String>(
         value: value,
@@ -293,7 +237,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         items: items
             .map(
               (e) => DropdownMenuItem(value: e, child: Text(e)),
-            )
+        )
             .toList(),
         onChanged: onChanged,
       ),
