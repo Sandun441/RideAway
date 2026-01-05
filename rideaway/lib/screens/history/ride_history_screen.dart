@@ -70,7 +70,9 @@ class RideHistoryScreen extends StatelessWidget {
                           label: "km Traveled",
                           color: Colors.green),
                       _SummaryStat(
-                          value: "1", label: "Alert Sent", color: Colors.red),
+                          value: "1",
+                          label: "Alert Sent",
+                          color: Colors.red),
                     ],
                   ),
                 ],
@@ -99,7 +101,8 @@ class RideHistoryScreen extends StatelessWidget {
               duration: "45m",
               distance: "8.7 km",
               speed: "11.6 mph",
-              warning: "Potential incident detected but cancelled by user",
+              warning:
+              "Potential incident detected but cancelled by user",
             ),
 
             _rideCard(
@@ -122,7 +125,8 @@ class RideHistoryScreen extends StatelessWidget {
               duration: "1h 12m",
               distance: "12.8 km",
               speed: "10.7 mph",
-              warning: "Emergency alert was sent to your contacts at 7:41 PM",
+              warning:
+              "Emergency alert was sent to your contacts at 7:41 PM",
             ),
 
             _rideCard(
@@ -153,16 +157,16 @@ class RideHistoryScreen extends StatelessWidget {
 
   /// Ride Card (THEME AWARE)
   Widget _rideCard(
-    BuildContext context, {
-    required String title,
-    required String date,
-    required String status,
-    required Color statusColor,
-    required String duration,
-    required String distance,
-    required String speed,
-    String? warning,
-  }) {
+      BuildContext context, {
+        required String title,
+        required String date,
+        required String status,
+        required Color statusColor,
+        required String duration,
+        required String distance,
+        required String speed,
+        String? warning,
+      }) {
     final theme = Theme.of(context);
 
     return Container(
@@ -200,7 +204,7 @@ class RideHistoryScreen extends StatelessWidget {
               ),
               Container(
                 padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
                   color: statusColor.withOpacity(0.15),
                   borderRadius: BorderRadius.circular(20),
@@ -255,7 +259,8 @@ class RideHistoryScreen extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(label,
-            style: theme.textTheme.bodySmall?.copyWith(color: Colors.grey)),
+            style: theme.textTheme.bodySmall
+                ?.copyWith(color: Colors.grey)),
         const SizedBox(height: 4),
         Text(value,
             style: theme.textTheme.bodyMedium
@@ -303,9 +308,12 @@ class _SummaryStat extends StatelessWidget {
       children: [
         Text(value,
             style: TextStyle(
-                fontSize: 18, fontWeight: FontWeight.bold, color: color)),
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: color)),
         const SizedBox(height: 4),
-        Text(label, style: Theme.of(context).textTheme.bodySmall),
+        Text(label,
+            style: Theme.of(context).textTheme.bodySmall),
       ],
     );
   }

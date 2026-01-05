@@ -258,11 +258,11 @@ class HomeScreen extends StatelessWidget {
 
   /// QUICK BUTTON
   Widget _quickButton(
-    BuildContext context, {
-    required IconData icon,
-    required String label,
-    required VoidCallback onTap,
-  }) {
+      BuildContext context, {
+        required IconData icon,
+        required String label,
+        required VoidCallback onTap,
+      }) {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
 
@@ -317,8 +317,8 @@ class _SummaryItem extends StatelessWidget {
         const SizedBox(height: 4),
         Text(
           value,
-          style:
-              theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.bold),
+          style: theme.textTheme.bodyMedium
+              ?.copyWith(fontWeight: FontWeight.bold),
         ),
       ],
     );

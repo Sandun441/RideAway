@@ -7,7 +7,7 @@ class AppTheme {
     scaffoldBackgroundColor: Colors.white,
     appBarTheme: const AppBarTheme(
       backgroundColor: Colors.white,
-      foregroundColor: Color.fromARGB(255, 233, 206, 206),
+      foregroundColor: Colors.black,
       elevation: 0,
     ),
   );
@@ -15,9 +15,9 @@ class AppTheme {
   static ThemeData darkTheme = ThemeData(
     brightness: Brightness.dark,
     primarySwatch: Colors.blue,
-    scaffoldBackgroundColor: const Color.fromARGB(255, 216, 91, 91),
+    scaffoldBackgroundColor: const Color(0xFF1E1C1C),
     appBarTheme: const AppBarTheme(
-      backgroundColor: Color.fromARGB(255, 133, 105, 105),
+      backgroundColor: Color(0xFF1E1C1C),
       foregroundColor: Colors.white,
       elevation: 0,
     ),
