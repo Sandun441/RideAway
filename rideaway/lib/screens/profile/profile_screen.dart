@@ -4,6 +4,7 @@ import '../../services/auth_service.dart';
 import '../../services/db_service.dart';
 import '../../routes/app_routes.dart';
 import 'edit_profile_screen.dart'; // Ensure you created this file from the previous step
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -37,48 +38,64 @@ class _ProfileScreenState extends State<ProfileScreen> {
     _fetchUserData();
   }
 
-  // 1. Fetch Data & Check Verification Status
   void _fetchUserData() async {
     final User? currentUser = FirebaseAuth.instance.currentUser;
 
     if (currentUser != null) {
-      final data = await DatabaseService().getUser(currentUser.uid);
+      try {
+        // 1. Fetch main user document (for Name, Phone, Location)
+        final data = await DatabaseService().getUser(currentUser.uid);
 
-      if (data != null && mounted) {
-        setState(() {
-          _userData = data;
-          _fullName = data['fullName'] ?? "Unknown";
-          _email = data['email'] ?? currentUser.email;
+        // 2. NEW: Fetch the contacts sub-collection to check if it's empty
+        // This looks at /users/UID/contacts
+        final contactSnapshot = await FirebaseFirestore.instance
+            .collection('users')
+            .doc(currentUser.uid)
+            .collection('contacts')
+            .get();
 
-          // Helper to check if string is null or empty
-          bool hasText(String? val) => val != null && val.isNotEmpty;
+        if (data != null && mounted) {
+          setState(() {
+            _userData = data;
+            _fullName = data['fullName'] ?? "Unknown";
+            _email = data['email'] ?? currentUser.email;
 
-          _phone = hasText(data['phone']) ? data['phone'] : "Not set";
-          _location = hasText(data['location']) ? data['location'] : "Not set";
+            // Helper to check if string is valid
+            bool hasText(String? val) => val != null && val.trim().isNotEmpty;
 
-          // Initials Logic
-          if (_fullName.isNotEmpty) {
-            _initials = _fullName
-                .trim()
-                .split(' ')
-                .map((l) => l.isNotEmpty ? l[0] : '')
-                .take(2)
-                .join()
-                .toUpperCase();
-          }
+            _phone = hasText(data['phone']) ? data['phone'] : "Not set";
+            _location = hasText(data['location'])
+                ? data['location']
+                : "Not set";
 
-          // --- VERIFICATION LOGIC ---
-          _missingPhone = !hasText(data['phone']);
-          _missingLocation = !hasText(data['location']);
+            // Initials Logic
+            if (_fullName.isNotEmpty && _fullName != "Loading...") {
+              _initials = _fullName
+                  .trim()
+                  .split(' ')
+                  .map((l) => l.isNotEmpty ? l[0] : '')
+                  .take(2)
+                  .join()
+                  .toUpperCase();
+            }
 
-          List contacts = data['emergencyContacts'] ?? [];
-          _missingContact = contacts.isEmpty;
+            // --- REFRESHED VERIFICATION LOGIC ---
+            _missingPhone = !hasText(data['phone']);
+            _missingLocation = !hasText(data['location']);
 
-          // verified only if NOTHING is missing
-          _isVerified = !_missingPhone && !_missingLocation && !_missingContact;
+            // This is the fix: It counts the documents in your sub-collection
+            _missingContact = contactSnapshot.docs.isEmpty;
 
-          _isLoading = false;
-        });
+            // Verified only if all 3 requirements are met
+            _isVerified =
+                !_missingPhone && !_missingLocation && !_missingContact;
+
+            _isLoading = false;
+          });
+        }
+      } catch (e) {
+        debugPrint("Error fetching data: $e");
+        if (mounted) setState(() => _isLoading = false);
       }
     }
   }
