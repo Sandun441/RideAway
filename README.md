@@ -40,8 +40,3 @@ Follow these steps to run the project locally.
 - Flutter SDK installed.
 - Android Studio / VS Code set up.
 - An Android Emulator or Physical Device.
-
-### 1. Clone the Repository
-```bash
-git clone [https://github.com/yourusername/smart-ride-safety.git](https://github.com/yourusername/smart-ride-safety.git)
-cd smart-ride-safety
