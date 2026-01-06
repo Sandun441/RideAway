@@ -44,9 +44,12 @@ class DatabaseService {
 
   Future<void> updateUserProfile(String uid, Map<String, dynamic> data) async {
     try {
-      await _db.collection('users').doc(uid).update(data);
+      // Use .set with merge: true instead of .update()
+      // This creates the document if it's missing!
+      await _db.collection('users').doc(uid).set(data, SetOptions(merge: true));
+      print("Profile sync successful for UID: $uid");
     } catch (e) {
-      print("Error updating profile: $e");
+      print("Error in DatabaseService: $e");
       throw e;
     }
   }
