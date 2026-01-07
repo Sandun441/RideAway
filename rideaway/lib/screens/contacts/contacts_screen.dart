@@ -59,7 +59,7 @@ class _ContactsScreenState extends State<ContactsScreen> {
               padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
                 color: isDark
-                    ? colors.surfaceVariant
+                    ? colors.surfaceContainerHighest
                     : colors.primary.withOpacity(0.08),
                 borderRadius: BorderRadius.circular(12),
               ),

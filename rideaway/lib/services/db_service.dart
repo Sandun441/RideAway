@@ -50,7 +50,7 @@ class DatabaseService {
       print("Profile sync successful for UID: $uid");
     } catch (e) {
       print("Error in DatabaseService: $e");
-      throw e;
+      rethrow;
     }
   }
 }

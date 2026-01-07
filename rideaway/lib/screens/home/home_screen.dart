@@ -58,7 +58,7 @@ class HomeScreen extends StatelessWidget {
                         child: CircleAvatar(
                           radius: 18,
                           backgroundColor: isDark
-                              ? colors.surfaceVariant
+                              ? colors.surfaceContainerHighest
                               : colors.primaryContainer,
                           child: Icon(
                             Icons.person,
@@ -100,7 +100,7 @@ class HomeScreen extends StatelessWidget {
                     CircleAvatar(
                       radius: 38,
                       backgroundColor: isDark
-                          ? colors.surfaceVariant
+                          ? colors.surfaceContainerHighest
                           : colors.primary.withOpacity(0.12),
                       child: Icon(
                         Icons.shield_outlined,
