@@ -10,4 +10,5 @@ class AppRoutes {
   static const history = '/history';
   static const profile = '/profile';
   static const registration = '/registration';
+  static const monitor = '/monitor';
 }

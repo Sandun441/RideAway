@@ -125,7 +125,7 @@ class HomeScreen extends StatelessWidget {
                           ),
                         ),
                         onPressed: () {
-                          Navigator.pushNamed(context, AppRoutes.accident);
+                          Navigator.pushNamed(context, AppRoutes.monitor);
                         },
                         icon: const Icon(Icons.play_arrow),
                         label: const Text("Start Monitoring"),

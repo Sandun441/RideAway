@@ -16,6 +16,7 @@ import 'screens/history/ride_history_screen.dart';
 import 'screens/profile/profile_screen.dart';
 import 'screens/accident/accident_detected_screen.dart';
 import 'screens/accident/alert_sent_screen.dart';
+import 'screens/home/ride_monitoring_screen.dart';
 // Note: Ensure the filename below matches your file exactly (case-sensitive)
 import 'screens/auth/RegistrationScreen.dart';
 import 'screens/splash/splash_screen.dart'; // Import your splash screen
@@ -64,6 +65,7 @@ class SmartRideApp extends StatelessWidget {
             AppRoutes.profile: (_) => const ProfileScreen(),
             AppRoutes.accident: (_) => const AccidentDetectedScreen(),
             AppRoutes.alertSent: (_) => const AlertSentScreen(),
+            AppRoutes.monitor: (_) => const RideMonitoringScreen(),
           },
         );
       },
