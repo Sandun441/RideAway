@@ -17,14 +17,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.13.0"
-  background_sms:
-    dependency: "direct main"
-    description:
-      name: background_sms
-      sha256: "680edd2b7c4e487c2799e337d40ed166158ba15369eb0578ac804c3aa1845226"
-      url: "https://pub.dev"
-    source: hosted
-    version: "0.0.4"
   boolean_selector:
     dependency: transitive
     description:
@@ -166,6 +158,14 @@ packages:
     description: flutter
     source: sdk
     version: "0.0.0"
+  flutter_background_messenger:
+    dependency: "direct main"
+    description:
+      name: flutter_background_messenger
+      sha256: "8f6c14348e10780b9a23541e8e6c6dcc20404da3a73cca0c0726012171a6e88f"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.0.2"
   flutter_lints:
     dependency: "direct dev"
     description:
