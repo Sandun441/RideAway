@@ -1,11 +1,114 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import '../../services/auth_service.dart';
+import '../../services/db_service.dart';
+import '../../routes/app_routes.dart';
+import 'edit_profile_screen.dart';
 
-class ProfileScreen extends StatelessWidget {
+class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
+
+  @override
+  State<ProfileScreen> createState() => _ProfileScreenState();
+}
+
+class _ProfileScreenState extends State<ProfileScreen> {
+  Map<String, dynamic> _userData = {};
+  String _fullName = "Loading...";
+  String _email = "Loading...";
+  String _phone = "Not set";
+  String _location = "Not set";
+  String _initials = "..";
+
+  bool _isVerified = false;
+  bool _isLoading = true;
+
+  bool _missingPhone = true;
+  bool _missingLocation = true;
+  bool _missingContact = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchUserData();
+  }
+
+  Future<void> _fetchUserData() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+
+    try {
+      final data = await DatabaseService().getUser(user.uid);
+
+      final contacts = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .collection('contacts')
+          .get();
+
+      if (!mounted) return;
+
+      bool hasText(String? v) => v != null && v.trim().isNotEmpty;
+
+      setState(() {
+        _userData = data ?? {};
+        _fullName = data?['fullName'] ?? "Unknown";
+        _email = data?['email'] ?? user.email ?? "Unknown";
+        _phone = hasText(data?['phone']) ? data!['phone'] : "Not set";
+        _location =
+            hasText(data?['location']) ? data!['location'] : "Not set";
+
+        _initials = _fullName
+            .split(' ')
+            .map((e) => e.isNotEmpty ? e[0] : '')
+            .take(2)
+            .join()
+            .toUpperCase();
+
+        _missingPhone = !hasText(data?['phone']);
+        _missingLocation = !hasText(data?['location']);
+        _missingContact = contacts.docs.isEmpty;
+
+        _isVerified =
+            !_missingPhone && !_missingLocation && !_missingContact;
+
+        _isLoading = false;
+      });
+    } catch (e) {
+      debugPrint("Profile error: $e");
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  void _navigateToEdit() async {
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => EditProfileScreen(currentData: _userData),
+      ),
+    );
+
+    if (result == true) {
+      setState(() => _isLoading = true);
+      _fetchUserData();
+    }
+  }
+
+  void _handleSignOut() async {
+    await AuthService().signOut();
+    if (!mounted) return;
+    Navigator.pushNamedAndRemoveUntil(
+      context,
+      AppRoutes.login,
+      (_) => false,
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final colors = theme.colorScheme;
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
@@ -18,195 +121,202 @@ class ProfileScreen extends StatelessWidget {
         actions: [
           IconButton(
             icon: const Icon(Icons.edit_outlined),
-            onPressed: () {},
+            onPressed: _navigateToEdit,
           ),
         ],
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          children: [
-            /// Profile Card
-            _card(
-              context,
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : SingleChildScrollView(
+              padding: const EdgeInsets.all(20),
               child: Column(
                 children: [
-                  Row(
-                    children: [
-                      CircleAvatar(
-                        radius: 28,
-                        backgroundColor: theme.colorScheme.primary,
-                        child: const Text(
-                          "AJ",
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 18,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                  _card(
+                    theme,
+                    child: Column(
+                      children: [
+                        Row(
                           children: [
-                            Text(
-                              "Alex Johnson",
-                              style: theme.textTheme.bodyLarge
-                                  ?.copyWith(fontWeight: FontWeight.bold),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              "Cycling enthusiast since 2020",
-                              style: theme.textTheme.bodySmall,
-                            ),
-                            const SizedBox(height: 6),
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 8, vertical: 4),
-                              decoration: BoxDecoration(
-                                color:
-                                Colors.green.withOpacity(0.15),
-                                borderRadius: BorderRadius.circular(20),
-                              ),
-                              child: const Text(
-                                "Verified Rider",
+                            CircleAvatar(
+                              radius: 30,
+                              backgroundColor: colors.primary,
+                              child: Text(
+                                _initials,
                                 style: TextStyle(
-                                    fontSize: 12, color: Colors.green),
+                                  color: colors.onPrimary,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment:
+                                    CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    _fullName,
+                                    style: theme.textTheme.titleMedium
+                                        ?.copyWith(
+                                            fontWeight:
+                                                FontWeight.bold),
+                                  ),
+                                  const SizedBox(height: 6),
+                                  Container(
+                                    padding:
+                                        const EdgeInsets.symmetric(
+                                            horizontal: 10,
+                                            vertical: 4),
+                                    decoration: BoxDecoration(
+                                      color: _isVerified
+                                          ? colors.primaryContainer
+                                          : colors.errorContainer,
+                                      borderRadius:
+                                          BorderRadius.circular(20),
+                                    ),
+                                    child: Row(
+                                      mainAxisSize:
+                                          MainAxisSize.min,
+                                      children: [
+                                        Icon(
+                                          _isVerified
+                                              ? Icons.verified
+                                              : Icons
+                                                  .warning_amber_rounded,
+                                          size: 16,
+                                          color: _isVerified
+                                              ? colors
+                                                  .onPrimaryContainer
+                                              : colors
+                                                  .onErrorContainer,
+                                        ),
+                                        const SizedBox(width: 6),
+                                        Text(
+                                          _isVerified
+                                              ? "Verified Account"
+                                              : "Action Required",
+                                          style: TextStyle(
+                                            fontSize: 12,
+                                            fontWeight:
+                                                FontWeight.bold,
+                                            color: _isVerified
+                                                ? colors
+                                                    .onPrimaryContainer
+                                                : colors
+                                                    .onErrorContainer,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
                           ],
                         ),
+
+                        if (!_isVerified) ...[
+                          const SizedBox(height: 16),
+                          Divider(color: colors.outlineVariant),
+                          Align(
+                            alignment: Alignment.centerLeft,
+                            child: Text(
+                              "Complete profile to verify:",
+                              style:
+                                  theme.textTheme.labelSmall,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          if (_missingPhone)
+                            _missingItem(
+                                theme, "Add Phone Number"),
+                          if (_missingLocation)
+                            _missingItem(
+                                theme, "Add Location"),
+                          if (_missingContact)
+                            _missingItem(theme,
+                                "Add Emergency Contact"),
+                        ],
+
+                        const SizedBox(height: 16),
+                        Divider(color: colors.outlineVariant),
+                        _infoRow(
+                            theme, Icons.email_outlined, _email),
+                        _infoRow(theme,
+                            Icons.phone_outlined, _phone),
+                        _infoRow(
+                            theme,
+                            Icons.location_on_outlined,
+                            _location),
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(height: 20),
+
+                  _card(
+                    theme,
+                    title: "Safety Features",
+                    child: Column(
+                      children: [
+                        _featureTile(theme, "Accident Detection",
+                            "Ready", colors.primary),
+                        _featureTile(
+                            theme,
+                            "Location Sharing",
+                            _missingLocation
+                                ? "Missing"
+                                : "Ready",
+                            _missingLocation
+                                ? colors.error
+                                : colors.secondary),
+                        _featureTile(
+                            theme,
+                            "Emergency Contacts",
+                            _missingContact
+                                ? "Empty"
+                                : "Configured",
+                            _missingContact
+                                ? colors.error
+                                : colors.primary),
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(height: 20),
+
+                  SizedBox(
+                    width: double.infinity,
+                    height: 46,
+                    child: OutlinedButton.icon(
+                      onPressed: _handleSignOut,
+                      icon: Icon(Icons.logout,
+                          color: colors.error),
+                      label: Text(
+                        "Sign Out",
+                        style:
+                            TextStyle(color: colors.error),
                       ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  _infoRow(context, Icons.email_outlined,
-                      "alex.johnson@email.com"),
-                  _infoRow(
-                      context, Icons.phone_outlined, "+1 (555) 123-4567"),
-                  _infoRow(context, Icons.location_on_outlined,
-                      "San Francisco, CA"),
-                ],
-              ),
-            ),
-
-            const SizedBox(height: 20),
-
-            /// Riding Statistics
-            _card(
-              context,
-              title: "Riding Statistics",
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: const [
-                  _StatItem(
-                      value: "47", label: "Total Rides", color: Colors.blue),
-                  _StatItem(
-                      value: "342 km",
-                      label: "Distance",
-                      color: Colors.green),
-                  _StatItem(
-                      value: "98%",
-                      label: "Safety Score",
-                      color: Colors.purple),
-                ],
-              ),
-            ),
-
-            const SizedBox(height: 20),
-
-            /// Safety Features
-            _card(
-              context,
-              title: "Safety Features",
-              child: Column(
-                children: [
-                  _featureTile(
-                      "Accident Detection", "Enabled", Colors.green),
-                  _featureTile(
-                      "Location Sharing", "Active", Colors.blue),
-                  _featureTile(
-                      "Emergency Contacts", "Configured", Colors.grey),
-                ],
-              ),
-            ),
-
-            const SizedBox(height: 20),
-
-            /// Account
-            _card(
-              context,
-              title: "Account",
-              child: Column(
-                children: const [
-                  ListTile(
-                    title: Text("Privacy Settings"),
-                    trailing: Icon(Icons.chevron_right),
-                  ),
-                  ListTile(
-                    title: Text("Notification Preferences"),
-                    trailing: Icon(Icons.chevron_right),
-                  ),
-                  ListTile(
-                    title: Text("Help & Support"),
-                    trailing: Icon(Icons.chevron_right),
+                      style: OutlinedButton.styleFrom(
+                        side:
+                            BorderSide(color: colors.error),
+                        shape: RoundedRectangleBorder(
+                          borderRadius:
+                              BorderRadius.circular(12),
+                        ),
+                      ),
+                    ),
                   ),
                 ],
               ),
             ),
-
-            const SizedBox(height: 20),
-
-            /// Footer
-            Column(
-              children: [
-                Text("Smart Ride Safety",
-                    style: theme.textTheme.titleMedium
-                        ?.copyWith(fontWeight: FontWeight.bold)),
-                const SizedBox(height: 4),
-                Text(
-                  "Version 1.2.3 · Terms · Privacy",
-                  style: theme.textTheme.bodySmall,
-                ),
-              ],
-            ),
-
-            const SizedBox(height: 20),
-
-            /// Sign Out
-            SizedBox(
-              width: double.infinity,
-              height: 46,
-              child: OutlinedButton.icon(
-                onPressed: () => Navigator.pop(context),
-                icon: const Icon(Icons.logout, color: Colors.red),
-                label: const Text(
-                  "Sign Out",
-                  style: TextStyle(color: Colors.red),
-                ),
-                style: OutlinedButton.styleFrom(
-                  side: const BorderSide(color: Colors.red),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
     );
   }
 
-  /// Reusable Card (THEME AWARE)
-  Widget _card(
-      BuildContext context, {
-        String? title,
-        required Widget child,
-      }) {
-    final theme = Theme.of(context);
 
+
+  Widget _card(ThemeData theme,
+      {String? title, required Widget child}) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(16),
@@ -215,7 +325,7 @@ class ProfileScreen extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withOpacity(0.08),
             blurRadius: 8,
             offset: const Offset(0, 4),
           ),
@@ -226,8 +336,9 @@ class ProfileScreen extends StatelessWidget {
         children: [
           if (title != null) ...[
             Text(title,
-                style: theme.textTheme.bodyLarge
-                    ?.copyWith(fontWeight: FontWeight.bold)),
+                style: theme.textTheme.titleSmall
+                    ?.copyWith(
+                        fontWeight: FontWeight.bold)),
             const SizedBox(height: 12),
           ],
           child,
@@ -237,71 +348,69 @@ class ProfileScreen extends StatelessWidget {
   }
 
   Widget _infoRow(
-      BuildContext context, IconData icon, String text) {
-    final theme = Theme.of(context);
-
+      ThemeData theme, IconData icon, String text) {
+    final colors = theme.colorScheme;
     return Padding(
-      padding: const EdgeInsets.only(bottom: 6),
+      padding: const EdgeInsets.only(bottom: 8),
       child: Row(
         children: [
-          Icon(icon, size: 18, color: theme.iconTheme.color),
+          Icon(icon, size: 18, color: colors.outline),
           const SizedBox(width: 8),
           Text(text, style: theme.textTheme.bodyMedium),
         ],
       ),
     );
   }
-}
 
-/// Statistic Item
-class _StatItem extends StatelessWidget {
-  final String value;
-  final String label;
-  final Color color;
-
-  const _StatItem({
-    required this.value,
-    required this.label,
-    required this.color,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return Column(
-      children: [
-        Text(value,
-            style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: color)),
-        const SizedBox(height: 4),
-        Text(label, style: theme.textTheme.bodySmall),
-      ],
+  Widget _missingItem(ThemeData theme, String text) {
+    final colors = theme.colorScheme;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 4),
+      child: Row(
+        children: [
+          Icon(Icons.cancel,
+              size: 14, color: colors.error),
+          const SizedBox(width: 8),
+          Text(text,
+              style: TextStyle(
+                  fontSize: 13, color: colors.error)),
+        ],
+      ),
     );
   }
-}
 
-/// Feature Tile
-Widget _featureTile(String title, String status, Color color) {
-  return ListTile(
-    leading: CircleAvatar(
-      radius: 18,
-      backgroundColor: color.withOpacity(0.15),
-      child: Icon(Icons.check, color: color),
-    ),
-    title: Text(title),
-    trailing: Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.15),
-        borderRadius: BorderRadius.circular(20),
+  Widget _featureTile(ThemeData theme, String title,
+      String status, Color color) {
+    return ListTile(
+      contentPadding: EdgeInsets.zero,
+      leading: CircleAvatar(
+        radius: 18,
+        backgroundColor: color.withOpacity(0.15),
+        child: Icon(
+          status == "Empty" || status == "Missing"
+              ? Icons.priority_high
+              : Icons.check,
+          color: color,
+          size: 16,
+        ),
       ),
-      child: Text(
-        status,
-        style: TextStyle(color: color, fontSize: 12),
+      title:
+          Text(title, style: theme.textTheme.bodyMedium),
+      trailing: Container(
+        padding:
+            const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+        decoration: BoxDecoration(
+          color: color.withOpacity(0.15),
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Text(
+          status,
+          style: TextStyle(
+              color: color,
+              fontSize: 12,
+              fontWeight: FontWeight.bold),
+        ),
       ),
-    ),
-  );
+    );
+  }
 }
