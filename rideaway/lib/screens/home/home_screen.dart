@@ -1,14 +1,54 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../../routes/app_routes.dart';
+import '../../services/db_service.dart';
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  String _userName = "";
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserName();
+  }
+
+  Future<void> _loadUserName() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      final data = await DatabaseService().getUser(user.uid);
+      if (mounted) {
+        setState(() {
+          _userName = data?['fullName'] ?? user.displayName ?? "Rider";
+          _isLoading = false;
+        });
+      }
+    } else {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  String _getGreeting() {
+    final hour = DateTime.now().hour;
+    if (hour < 12) return "Good morning";
+    if (hour < 17) return "Good afternoon";
+    return "Good evening";
+  }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
     final isDark = theme.brightness == Brightness.dark;
+
+    final firstName = _userName.split(' ').first;
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
@@ -26,7 +66,9 @@ class HomeScreen extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        "Good morning, Alex",
+                        _isLoading
+                            ? "Loading..."
+                            : "${_getGreeting()}, $firstName",
                         style: theme.textTheme.titleMedium?.copyWith(
                           fontWeight: FontWeight.bold,
                         ),
@@ -116,9 +158,7 @@ class HomeScreen extends StatelessWidget {
                       height: 48,
                       child: ElevatedButton.icon(
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: isDark
-                              ? colors.primary
-                              : colors.primary,
+                          backgroundColor: colors.primary,
                           foregroundColor: colors.onPrimary,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12),
@@ -130,45 +170,6 @@ class HomeScreen extends StatelessWidget {
                         icon: const Icon(Icons.play_arrow),
                         label: const Text("Start Monitoring"),
                       ),
-                    ),
-                  ],
-                ),
-              ),
-
-              const SizedBox(height: 20),
-
-              /// LAST RIDE SUMMARY
-              _card(
-                context,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      "Last Ride Summary",
-                      style: theme.textTheme.titleSmall?.copyWith(
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceAround,
-                      children: const [
-                        _SummaryItem(
-                          icon: Icons.timer,
-                          label: "Duration",
-                          value: "1h 23m",
-                        ),
-                        _SummaryItem(
-                          icon: Icons.location_on,
-                          label: "Distance",
-                          value: "15.2 km",
-                        ),
-                        _SummaryItem(
-                          icon: Icons.favorite,
-                          label: "Status",
-                          value: "Safe",
-                        ),
-                      ],
                     ),
                   ],
                 ),
@@ -278,7 +279,7 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
-  /// QUICK BUTTON (MINIMAL ICONS)
+  /// QUICK BUTTON
   Widget _quickButton(
     BuildContext context, {
     required IconData icon,
@@ -312,46 +313,6 @@ class HomeScreen extends StatelessWidget {
           ),
         ),
       ),
-    );
-  }
-}
-
-/// SUMMARY ITEM (SUBTLE ICONS)
-class _SummaryItem extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final String value;
-
-  const _SummaryItem({
-    required this.icon,
-    required this.label,
-    required this.value,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
-
-    return Column(
-      children: [
-        CircleAvatar(
-          backgroundColor: isDark ? Colors.grey.shade800 : Colors.grey.shade200,
-          child: Icon(
-            icon,
-            color: isDark ? Colors.grey.shade300 : Colors.grey.shade700,
-          ),
-        ),
-        const SizedBox(height: 8),
-        Text(label, style: theme.textTheme.bodySmall),
-        const SizedBox(height: 4),
-        Text(
-          value,
-          style: theme.textTheme.bodyMedium?.copyWith(
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-      ],
     );
   }
 }

@@ -71,7 +71,6 @@ class _AddContactDialogState extends State<AddContactDialog> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
     final colors = theme.colorScheme;
 
     return Dialog(

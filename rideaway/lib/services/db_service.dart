@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/foundation.dart';
 
 class DatabaseService {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
@@ -24,11 +25,10 @@ class DatabaseService {
       // If snapshot.exists is true, we do NOTHING.
       // This preserves your phone/location data on future logins.
     } catch (e) {
-      print("Error saving user: $e");
+      debugPrint("Error saving user: $e");
     }
   }
 
-  // ... keep getUser and updateUserProfile the same ...
   Future<Map<String, dynamic>?> getUser(String uid) async {
     try {
       DocumentSnapshot doc = await _db.collection('users').doc(uid).get();
@@ -37,7 +37,7 @@ class DatabaseService {
       }
       return null;
     } catch (e) {
-      print("Error fetching user: $e");
+      debugPrint("Error fetching user: $e");
       return null;
     }
   }
@@ -47,9 +47,9 @@ class DatabaseService {
       // Use .set with merge: true instead of .update()
       // This creates the document if it's missing!
       await _db.collection('users').doc(uid).set(data, SetOptions(merge: true));
-      print("Profile sync successful for UID: $uid");
+      debugPrint("Profile sync successful for UID: $uid");
     } catch (e) {
-      print("Error in DatabaseService: $e");
+      debugPrint("Error in DatabaseService: $e");
       rethrow;
     }
   }

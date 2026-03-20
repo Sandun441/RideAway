@@ -1,8 +1,24 @@
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../routes/app_routes.dart';
 
 class AlertSentScreen extends StatelessWidget {
   const AlertSentScreen({super.key});
+
+  String _formattedTime() {
+    final now = DateTime.now();
+    final hour = now.hour > 12 ? now.hour - 12 : (now.hour == 0 ? 12 : now.hour);
+    final minute = now.minute.toString().padLeft(2, '0');
+    final period = now.hour >= 12 ? "PM" : "AM";
+    return "$hour:$minute $period";
+  }
+
+  Future<void> _callEmergencyServices() async {
+    final Uri phoneUri = Uri(scheme: 'tel', path: '911');
+    if (await canLaunchUrl(phoneUri)) {
+      await launchUrl(phoneUri);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -15,10 +31,7 @@ class AlertSentScreen extends StatelessWidget {
         backgroundColor: Colors.green,
         foregroundColor: Colors.white,
         title: const Text("Emergency Alert Sent"),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => Navigator.pop(context),
-        ),
+        automaticallyImplyLeading: false,
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
@@ -40,15 +53,19 @@ class AlertSentScreen extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 12),
-                  const Text(
+                  Text(
                     "Alert Successfully Sent",
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                   const SizedBox(height: 6),
-                  const Text(
+                  Text(
                     "Your emergency contacts have been notified of your accident",
                     textAlign: TextAlign.center,
-                    style: TextStyle(color: Colors.grey),
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: Colors.grey,
+                    ),
                   ),
                   const SizedBox(height: 12),
                   Container(
@@ -60,9 +77,10 @@ class AlertSentScreen extends StatelessWidget {
                       color: Colors.green,
                       borderRadius: BorderRadius.circular(20),
                     ),
-                    child: const Text(
-                      "Sent at 2:34 PM",
-                      style: TextStyle(color: Colors.white, fontSize: 12),
+                    child: Text(
+                      "Sent at ${_formattedTime()}",
+                      style:
+                          const TextStyle(color: Colors.white, fontSize: 12),
                     ),
                   ),
                 ],
@@ -71,7 +89,7 @@ class AlertSentScreen extends StatelessWidget {
 
             const SizedBox(height: 20),
 
-            /// MAP / LOCATION
+            /// LOCATION PLACEHOLDER
             Container(
               height: 120,
               width: double.infinity,
@@ -81,56 +99,13 @@ class AlertSentScreen extends StatelessWidget {
               ),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
-                children: const [
-                  Icon(Icons.location_on, size: 30, color: Colors.red),
-                  SizedBox(height: 6),
+                children: [
+                  const Icon(Icons.location_on, size: 30, color: Colors.red),
+                  const SizedBox(height: 6),
                   Text(
-                    "Downtown Park Trail, Mile 3.2",
-                    style: TextStyle(fontSize: 13),
+                    "Location shared with contacts",
+                    style: theme.textTheme.bodySmall,
                   ),
-                ],
-              ),
-            ),
-
-            const SizedBox(height: 24),
-
-            /// CONTACTS NOTIFIED
-            _sectionTitle("Contacts Notified"),
-            _card(
-              context,
-              child: Column(
-                children: const [
-                  _ContactTile(
-                    name: "Mom",
-                    phone: "+1 (555) 123-4567",
-                    tag: "Family",
-                  ),
-                  _ContactTile(
-                    name: "Dr. Sarah Wilson",
-                    phone: "+1 (555) 987-6543",
-                    tag: "Doctor",
-                  ),
-                  _ContactTile(
-                    name: "Emergency Services",
-                    phone: "911",
-                    tag: "Emergency",
-                  ),
-                ],
-              ),
-            ),
-
-            const SizedBox(height: 24),
-
-            /// ALERT DETAILS
-            _sectionTitle("Alert Details"),
-            _card(
-              context,
-              child: Column(
-                children: const [
-                  _DetailRow("Time Detected", "2:34:12 PM"),
-                  _DetailRow("Location", "Downtown Park Trail"),
-                  _DetailRow("Impact Level", "High", valueColor: Colors.red),
-                  _DetailRow("Speed at Impact", "23 mph"),
                 ],
               ),
             ),
@@ -149,6 +124,13 @@ class AlertSentScreen extends StatelessWidget {
                     (_) => false,
                   );
                 },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: theme.colorScheme.primary,
+                  foregroundColor: theme.colorScheme.onPrimary,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
                 child: const Text("Return to Home"),
               ),
             ),
@@ -156,9 +138,19 @@ class AlertSentScreen extends StatelessWidget {
             SizedBox(
               width: double.infinity,
               height: 48,
-              child: OutlinedButton(
-                onPressed: () {},
-                child: const Text("Call Emergency Services"),
+              child: OutlinedButton.icon(
+                onPressed: _callEmergencyServices,
+                icon: const Icon(Icons.phone, color: Colors.red),
+                label: const Text(
+                  "Call Emergency Services",
+                  style: TextStyle(color: Colors.red),
+                ),
+                style: OutlinedButton.styleFrom(
+                  side: const BorderSide(color: Colors.red),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
               ),
             ),
           ],
@@ -185,76 +177,6 @@ class AlertSentScreen extends StatelessWidget {
         ],
       ),
       child: child,
-    );
-  }
-
-  Widget _sectionTitle(String title) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
-      child: Text(
-        title,
-        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-      ),
-    );
-  }
-}
-
-/// CONTACT TILE
-class _ContactTile extends StatelessWidget {
-  final String name;
-  final String phone;
-  final String tag;
-
-  const _ContactTile({
-    required this.name,
-    required this.phone,
-    required this.tag,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return ListTile(
-      contentPadding: EdgeInsets.zero,
-      leading: const CircleAvatar(
-        backgroundColor: Colors.green,
-        child: Icon(Icons.phone, color: Colors.white, size: 18),
-      ),
-      title: Text(name),
-      subtitle: Text(phone),
-      trailing: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-        decoration: BoxDecoration(
-          color: Colors.grey.shade200,
-          borderRadius: BorderRadius.circular(20),
-        ),
-        child: Text(tag, style: const TextStyle(fontSize: 12)),
-      ),
-    );
-  }
-}
-
-/// DETAIL ROW
-class _DetailRow extends StatelessWidget {
-  final String label;
-  final String value;
-  final Color? valueColor;
-
-  const _DetailRow(this.label, this.value, {this.valueColor});
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 10),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(label, style: const TextStyle(color: Colors.grey)),
-          Text(
-            value,
-            style: TextStyle(fontWeight: FontWeight.w600, color: valueColor),
-          ),
-        ],
-      ),
     );
   }
 }
