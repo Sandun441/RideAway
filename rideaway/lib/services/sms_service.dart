@@ -36,7 +36,7 @@ class SmsService {
     for (var contact in contactsList) {
       if (contact.phone.isNotEmpty) {
         try {
-          final bool? success = await _messenger.sendSMS(
+          final bool success = await _messenger.sendSMS(
             phoneNumber: contact.phone,
             message: message,
           );
