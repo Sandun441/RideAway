@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../routes/app_routes.dart';
 import '../../services/collision_detection_service.dart';
-import '../../services/sms_service.dart';
 
 class RideMonitoringScreen extends StatefulWidget {
   const RideMonitoringScreen({super.key});
@@ -12,7 +11,6 @@ class RideMonitoringScreen extends StatefulWidget {
 
 class _RideMonitoringScreenState extends State<RideMonitoringScreen> {
   late CollisionDetectionService _collisionService;
-  final SmsService _smsService = SmsService();
   bool _isMonitoring = false;
   String _statusMessage = "Ready to start";
 
@@ -22,8 +20,6 @@ class _RideMonitoringScreenState extends State<RideMonitoringScreen> {
     _collisionService = CollisionDetectionService(
       onCollisionDetected: _handleCollision,
     );
-    // Auto-start monitoring when screen opens? Or wait for user?
-    // Let's auto-start for "Start Monitoring" flow.
     _startMonitoring();
   }
 
@@ -44,27 +40,12 @@ class _RideMonitoringScreenState extends State<RideMonitoringScreen> {
   }
 
   Future<void> _handleCollision() async {
-    // 1. Stop monitoring to prevent duplicate triggers
+    // Stop monitoring to prevent duplicate triggers
     _stopMonitoring();
 
-    // 2. Navigate to "Accident Detected" immediately so user sees it
-    // In a real app, we might give a 10s countdown to cancel.
-    // For this MVP, we send immediately or just go to the screen.
-    // The requirement: "when collition detect, automatically send sms"
-
-    // Let's send SMS first or in parallel
-    try {
-      await _smsService.sendEmergencySms();
-      if (mounted) {
-        Navigator.pushReplacementNamed(context, AppRoutes.alertSent);
-      }
-    } catch (e) {
-      // If SMS fails, still show accident screen but maybe with error?
-      // Or just go to accident screen which lets them try again.
-      print("Error sending SMS: $e");
-      if (mounted) {
-        Navigator.pushReplacementNamed(context, AppRoutes.accident);
-      }
+    // Navigate to the countdown screen — it will handle SMS sending
+    if (mounted) {
+      Navigator.pushReplacementNamed(context, AppRoutes.accident);
     }
   }
 
@@ -83,14 +64,14 @@ class _RideMonitoringScreenState extends State<RideMonitoringScreen> {
         title: const Text("Ride Monitor"),
         leading: IconButton(
           icon: const Icon(Icons.close),
-          onPressed: () => Navigator.pop(context), // Stop & Exit
+          onPressed: () => Navigator.pop(context),
         ),
       ),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            // Pulsing Animation or Icon
+            // Monitoring Visual Indicator
             Container(
               width: 200,
               height: 200,
@@ -115,9 +96,9 @@ class _RideMonitoringScreenState extends State<RideMonitoringScreen> {
             const SizedBox(height: 40),
             Text(_statusMessage, style: theme.textTheme.headlineSmall),
             const SizedBox(height: 10),
-            const Text(
+            Text(
               "Keep the app open while riding",
-              style: TextStyle(color: Colors.grey),
+              style: theme.textTheme.bodyMedium?.copyWith(color: Colors.grey),
             ),
             const SizedBox(height: 40),
             ElevatedButton.icon(

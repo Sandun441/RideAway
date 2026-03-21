@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/theme/theme_controller.dart';
 
 class SettingsScreen extends StatefulWidget {
@@ -16,21 +17,51 @@ class _SettingsScreenState extends State<SettingsScreen> {
   String countdown = "30 seconds";
   String theme = "Auto (System)";
 
+  // SharedPreferences keys
+  static const String _keySensitivity = 'setting_sensitivity';
+  static const String _keyGps = 'setting_gps';
+  static const String _keyPush = 'setting_push';
+  static const String _keyVibration = 'setting_vibration';
+  static const String _keyCountdown = 'setting_countdown';
+
   String get sensitivityLabel =>
       ["Low", "Medium", "High"][sensitivity.toInt()];
 
   @override
   void initState() {
     super.initState();
+    _loadSettings();
+  }
 
-    // Sync dropdown with current theme
-    final mode = ThemeController.themeMode.value;
-    if (mode == ThemeMode.dark) {
-      theme = "Dark";
-    } else if (mode == ThemeMode.light) {
-      theme = "Light";
-    } else {
-      theme = "Auto (System)";
+  Future<void> _loadSettings() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      sensitivity = prefs.getDouble(_keySensitivity) ?? 1;
+      gpsEnabled = prefs.getBool(_keyGps) ?? true;
+      pushNotifications = prefs.getBool(_keyPush) ?? true;
+      vibrationAlerts = prefs.getBool(_keyVibration) ?? true;
+      countdown = prefs.getString(_keyCountdown) ?? "30 seconds";
+
+      // Sync dropdown with current theme
+      final mode = ThemeController.themeMode.value;
+      if (mode == ThemeMode.dark) {
+        theme = "Dark";
+      } else if (mode == ThemeMode.light) {
+        theme = "Light";
+      } else {
+        theme = "Auto (System)";
+      }
+    });
+  }
+
+  Future<void> _saveSetting(String key, dynamic value) async {
+    final prefs = await SharedPreferences.getInstance();
+    if (value is double) {
+      await prefs.setDouble(key, value);
+    } else if (value is bool) {
+      await prefs.setBool(key, value);
+    } else if (value is String) {
+      await prefs.setString(key, value);
     }
   }
 
@@ -68,6 +99,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     label: sensitivityLabel,
                     onChanged: (value) {
                       setState(() => sensitivity = value);
+                      _saveSetting(_keySensitivity, value);
                     },
                   ),
                   Row(
@@ -88,7 +120,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     "GPS Location Tracking",
                     "Share location in emergency alerts",
                     gpsEnabled,
-                        (val) => setState(() => gpsEnabled = val),
+                    (val) {
+                      setState(() => gpsEnabled = val);
+                      _saveSetting(_keyGps, val);
+                    },
                   ),
                 ],
               ),
@@ -107,19 +142,28 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     "Push Notifications",
                     "Receive app notifications",
                     pushNotifications,
-                        (val) => setState(() => pushNotifications = val),
+                    (val) {
+                      setState(() => pushNotifications = val);
+                      _saveSetting(_keyPush, val);
+                    },
                   ),
                   _switchTile(
                     "Vibration Alerts",
                     "Vibrate during accident detection",
                     vibrationAlerts,
-                        (val) => setState(() => vibrationAlerts = val),
+                    (val) {
+                      setState(() => vibrationAlerts = val);
+                      _saveSetting(_keyVibration, val);
+                    },
                   ),
                   _dropdownTile(
                     "Emergency Countdown",
                     countdown,
                     ["15 seconds", "30 seconds", "60 seconds"],
-                        (val) => setState(() => countdown = val!),
+                    (val) {
+                      setState(() => countdown = val!);
+                      _saveSetting(_keyCountdown, val!);
+                    },
                   ),
                   Padding(
                     padding: const EdgeInsets.only(left: 16, bottom: 8),
@@ -143,15 +187,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 "Theme",
                 theme,
                 ["Auto (System)", "Light", "Dark"],
-                    (val) {
+                (val) {
                   setState(() => theme = val!);
 
                   if (val == "Light") {
-                    ThemeController.themeMode.value = ThemeMode.light;
+                    ThemeController.setThemeMode(ThemeMode.light);
                   } else if (val == "Dark") {
-                    ThemeController.themeMode.value = ThemeMode.dark;
+                    ThemeController.setThemeMode(ThemeMode.dark);
                   } else {
-                    ThemeController.themeMode.value = ThemeMode.system;
+                    ThemeController.setThemeMode(ThemeMode.system);
                   }
                 },
               ),
@@ -194,7 +238,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  "Version 1.2.3",
+                  "Version 1.0.0",
                   style: themeData.textTheme.bodySmall,
                 ),
               ],
@@ -208,11 +252,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
   /// Reusable widgets
 
   Widget _card(
-      BuildContext context, {
-        required String title,
-        required IconData icon,
-        required Widget child,
-      }) {
+    BuildContext context, {
+    required String title,
+    required IconData icon,
+    required Widget child,
+  }) {
     final themeData = Theme.of(context);
 
     return Container(
@@ -259,17 +303,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ?.copyWith(fontWeight: FontWeight.w600)),
         Text(right,
             style:
-            themeData.textTheme.bodyMedium?.copyWith(color: Colors.blue)),
+                themeData.textTheme.bodyMedium?.copyWith(color: Colors.blue)),
       ],
     );
   }
 
   Widget _switchTile(
-      String title,
-      String subtitle,
-      bool value,
-      Function(bool) onChanged,
-      ) {
+    String title,
+    String subtitle,
+    bool value,
+    Function(bool) onChanged,
+  ) {
     return SwitchListTile(
       contentPadding: EdgeInsets.zero,
       title: Text(title),
@@ -280,11 +324,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Widget _dropdownTile(
-      String title,
-      String value,
-      List<String> items,
-      Function(String?) onChanged,
-      ) {
+    String title,
+    String value,
+    List<String> items,
+    Function(String?) onChanged,
+  ) {
     return ListTile(
       contentPadding: EdgeInsets.zero,
       title: Text(title),
@@ -294,7 +338,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         items: items
             .map(
               (e) => DropdownMenuItem(value: e, child: Text(e)),
-        )
+            )
             .toList(),
         onChanged: onChanged,
       ),
