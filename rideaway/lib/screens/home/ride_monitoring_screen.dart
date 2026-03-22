@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../routes/app_routes.dart';
 import '../../services/collision_detection_service.dart';
+import '../../services/email_service.dart';
 
 class RideMonitoringScreen extends StatefulWidget {
   const RideMonitoringScreen({super.key});
@@ -44,6 +45,19 @@ class _RideMonitoringScreenState extends State<RideMonitoringScreen> {
     _stopMonitoring();
 
     // Navigate to the countdown screen — it will handle SMS sending
+    if (mounted) {
+      Navigator.pushReplacementNamed(context, AppRoutes.accident);
+    }
+  }
+
+  Future<void> _handleSimulatedAccident() async {
+    _stopMonitoring();
+
+    // Call the new EmailService
+    final emailService = EmailService();
+    await emailService.sendEmergencyEmail(
+        location: 'Simulated Location (e.g. Lat: 40.7128, Lng: -74.0060)');
+
     if (mounted) {
       Navigator.pushReplacementNamed(context, AppRoutes.accident);
     }
@@ -119,6 +133,20 @@ class _RideMonitoringScreenState extends State<RideMonitoringScreen> {
             TextButton(
               onPressed: _handleCollision,
               child: const Text("Simulate Collision (Test)"),
+            ),
+            const SizedBox(height: 10),
+            ElevatedButton.icon(
+              onPressed: _handleSimulatedAccident,
+              icon: const Icon(Icons.email),
+              label: const Text("Test: Send Simulated Email Alert"),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.redAccent,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 12,
+                ),
+              ),
             ),
           ],
         ),
