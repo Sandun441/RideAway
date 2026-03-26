@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../routes/app_routes.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -20,12 +21,21 @@ class _SplashScreenState extends State<SplashScreen> {
     await Future.delayed(const Duration(seconds: 2));
     if (!mounted) return;
 
-    // Check if user is already logged in (with a real account, not anonymous)
     final user = FirebaseAuth.instance.currentUser;
     if (user != null && !user.isAnonymous) {
+      // Already logged in — go home
       Navigator.of(context).pushReplacementNamed(AppRoutes.home);
     } else {
-      Navigator.of(context).pushReplacementNamed(AppRoutes.login);
+      // Check if user has seen onboarding before
+      final prefs = await SharedPreferences.getInstance();
+      final seenOnboarding = prefs.getBool('seen_onboarding') ?? false;
+      if (!mounted) return;
+
+      if (seenOnboarding) {
+        Navigator.of(context).pushReplacementNamed(AppRoutes.login);
+      } else {
+        Navigator.of(context).pushReplacementNamed(AppRoutes.onboarding);
+      }
     }
   }
 
@@ -43,14 +53,14 @@ class _SplashScreenState extends State<SplashScreen> {
                 size: 80, color: theme.colorScheme.primary),
             const SizedBox(height: 16),
             Text(
-              "Smart Ride Safety",
+              'RideAway',
               style: theme.textTheme.headlineSmall?.copyWith(
                 fontWeight: FontWeight.bold,
               ),
             ),
             const SizedBox(height: 6),
             Text(
-              "Detect & Alert",
+              'Detect & Alert',
               style: theme.textTheme.bodyMedium,
             ),
           ],

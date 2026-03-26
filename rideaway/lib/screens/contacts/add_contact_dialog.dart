@@ -15,6 +15,7 @@ class _AddContactDialogState extends State<AddContactDialog> {
   late TextEditingController _nameController;
   late TextEditingController _phoneController;
   late TextEditingController _relationController;
+  late TextEditingController _emailController;
 
   final ContactService _service = ContactService();
   bool isLoading = false;
@@ -27,6 +28,7 @@ class _AddContactDialogState extends State<AddContactDialog> {
     _relationController = TextEditingController(
       text: widget.contact?.relation ?? '',
     );
+    _emailController = TextEditingController(text: widget.contact?.email ?? '');
   }
 
   @override
@@ -34,6 +36,7 @@ class _AddContactDialogState extends State<AddContactDialog> {
     _nameController.dispose();
     _phoneController.dispose();
     _relationController.dispose();
+    _emailController.dispose();
     super.dispose();
   }
 
@@ -41,7 +44,7 @@ class _AddContactDialogState extends State<AddContactDialog> {
     if (_nameController.text.isEmpty ||
         _phoneController.text.isEmpty ||
         _relationController.text.isEmpty) {
-      _showSnack("All fields are required");
+      _showSnack('Name, phone and relation are required');
       return;
     }
 
@@ -52,6 +55,7 @@ class _AddContactDialogState extends State<AddContactDialog> {
       name: _nameController.text.trim(),
       phone: _phoneController.text.trim(),
       relation: _relationController.text.trim(),
+      email: _emailController.text.trim(),
     );
 
     try {
@@ -62,7 +66,7 @@ class _AddContactDialogState extends State<AddContactDialog> {
       }
       if (mounted) Navigator.pop(context);
     } catch (e) {
-      _showSnack("Error saving contact");
+      _showSnack('Error saving contact');
     } finally {
       if (mounted) setState(() => isLoading = false);
     }
@@ -76,7 +80,7 @@ class _AddContactDialogState extends State<AddContactDialog> {
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
       backgroundColor: theme.cardColor,
-      child: Padding(
+      child: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -86,13 +90,14 @@ class _AddContactDialogState extends State<AddContactDialog> {
               children: [
                 CircleAvatar(
                   backgroundColor: colors.primary.withOpacity(0.15),
-                  child: Icon(Icons.person_add_outlined, color: colors.primary),
+                  child:
+                      Icon(Icons.person_add_outlined, color: colors.primary),
                 ),
                 const SizedBox(width: 12),
                 Text(
                   widget.contact == null
-                      ? "Add Emergency Contact"
-                      : "Edit Contact",
+                      ? 'Add Emergency Contact'
+                      : 'Edit Contact',
                   style: theme.textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.bold,
                   ),
@@ -106,7 +111,7 @@ class _AddContactDialogState extends State<AddContactDialog> {
             _inputField(
               context,
               controller: _nameController,
-              label: "Name",
+              label: 'Name',
               icon: Icons.person_outline,
             ),
 
@@ -116,7 +121,7 @@ class _AddContactDialogState extends State<AddContactDialog> {
             _inputField(
               context,
               controller: _phoneController,
-              label: "Phone Number",
+              label: 'Phone Number',
               icon: Icons.phone_outlined,
               keyboardType: TextInputType.phone,
             ),
@@ -127,8 +132,19 @@ class _AddContactDialogState extends State<AddContactDialog> {
             _inputField(
               context,
               controller: _relationController,
-              label: "Relation",
+              label: 'Relation (e.g. Parent)',
               icon: Icons.group_outlined,
+            ),
+
+            const SizedBox(height: 14),
+
+            /// EMAIL (optional)
+            _inputField(
+              context,
+              controller: _emailController,
+              label: 'Email (optional — for email alerts)',
+              icon: Icons.email_outlined,
+              keyboardType: TextInputType.emailAddress,
             ),
 
             const SizedBox(height: 24),
@@ -138,8 +154,9 @@ class _AddContactDialogState extends State<AddContactDialog> {
               children: [
                 Expanded(
                   child: TextButton(
-                    onPressed: isLoading ? null : () => Navigator.pop(context),
-                    child: const Text("Cancel"),
+                    onPressed:
+                        isLoading ? null : () => Navigator.pop(context),
+                    child: const Text('Cancel'),
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -157,9 +174,10 @@ class _AddContactDialogState extends State<AddContactDialog> {
                         ? const SizedBox(
                             height: 18,
                             width: 18,
-                            child: CircularProgressIndicator(strokeWidth: 2),
+                            child:
+                                CircularProgressIndicator(strokeWidth: 2),
                           )
-                        : const Text("Save"),
+                        : const Text('Save'),
                   ),
                 ),
               ],
@@ -170,7 +188,6 @@ class _AddContactDialogState extends State<AddContactDialog> {
     );
   }
 
-  /// INPUT FIELD (THEME AWARE)
   Widget _inputField(
     BuildContext context, {
     required TextEditingController controller,

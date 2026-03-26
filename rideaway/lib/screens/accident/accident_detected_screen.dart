@@ -1,28 +1,59 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../routes/app_routes.dart';
 import '../../services/sms_service.dart';
+import '../../services/location_service.dart';
 
 class AccidentDetectedScreen extends StatefulWidget {
   const AccidentDetectedScreen({super.key});
 
   @override
-  State<AccidentDetectedScreen> createState() =>
-      _AccidentDetectedScreenState();
+  State<AccidentDetectedScreen> createState() => _AccidentDetectedScreenState();
 }
 
 class _AccidentDetectedScreenState extends State<AccidentDetectedScreen>
     with SingleTickerProviderStateMixin {
-  int _countdown = 30;
+  int _countdown = 30; // default, updated in initState from prefs
   Timer? _timer;
   bool _isSending = false;
+  bool _isInitialized = false;
+  String? _locationString;
+
   final SmsService _smsService = SmsService();
 
   @override
   void initState() {
     super.initState();
+    _initialize();
+  }
+
+  Future<void> _initialize() async {
+    // 1. Load countdown setting from SharedPreferences
+    final prefs = await SharedPreferences.getInstance();
+    final countdownStr = prefs.getString('setting_countdown') ?? '30 seconds';
+    final countdownSeconds = _parseCountdown(countdownStr);
+
+    // 2. Get GPS location
+    final locationService = LocationService();
+    final location = await locationService.getCurrentLocationString();
+
+    if (!mounted) return;
+
+    setState(() {
+      _countdown = countdownSeconds;
+      _locationString = location;
+      _isInitialized = true;
+    });
+
     _startCountdown();
+  }
+
+  int _parseCountdown(String value) {
+    if (value.contains('15')) return 15;
+    if (value.contains('60')) return 60;
+    return 30; // default
   }
 
   void _startCountdown() {
@@ -40,7 +71,7 @@ class _AccidentDetectedScreenState extends State<AccidentDetectedScreen>
     setState(() => _isSending = true);
 
     try {
-      await _smsService.sendEmergencySms();
+      await _smsService.sendEmergencySms(location: _locationString);
       if (mounted) {
         Navigator.pushReplacementNamed(context, AppRoutes.alertSent);
       }
@@ -48,11 +79,12 @@ class _AccidentDetectedScreenState extends State<AccidentDetectedScreen>
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text("Alert error: ${e.toString().replaceFirst('Exception: ', '')}"),
+            content: Text(
+              'Alert error: ${e.toString().replaceFirst('Exception: ', '')}',
+            ),
             backgroundColor: Colors.red,
           ),
         );
-        // Still navigate to alert sent screen
         Navigator.pushReplacementNamed(context, AppRoutes.alertSent);
       }
     }
@@ -89,7 +121,7 @@ class _AccidentDetectedScreenState extends State<AccidentDetectedScreen>
       appBar: AppBar(
         backgroundColor: Colors.red,
         foregroundColor: Colors.white,
-        title: const Text("Accident Detected!"),
+        title: const Text('Accident Detected!'),
         automaticallyImplyLeading: false,
       ),
       body: Center(
@@ -116,7 +148,7 @@ class _AccidentDetectedScreenState extends State<AccidentDetectedScreen>
               const SizedBox(height: 24),
 
               Text(
-                "Possible Accident Detected",
+                'Possible Accident Detected',
                 style: theme.textTheme.headlineSmall?.copyWith(
                   fontWeight: FontWeight.bold,
                 ),
@@ -126,17 +158,41 @@ class _AccidentDetectedScreenState extends State<AccidentDetectedScreen>
               const SizedBox(height: 12),
 
               Text(
-                "Emergency alerts will be sent in",
+                'Emergency alerts will be sent in',
                 style: theme.textTheme.bodyLarge?.copyWith(
                   color: Colors.grey,
                 ),
                 textAlign: TextAlign.center,
               ),
 
+              // Location info
+              if (_locationString != null) ...[
+                const SizedBox(height: 8),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(Icons.location_on, color: Colors.red, size: 14),
+                    const SizedBox(width: 4),
+                    Flexible(
+                      child: Text(
+                        _locationString!,
+                        style: theme.textTheme.bodySmall
+                            ?.copyWith(color: Colors.grey),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+
               const SizedBox(height: 20),
 
-              /// Countdown Timer
-              if (!_isSending) ...[
+              /// Countdown Timer or Loading
+              if (!_isInitialized) ...[
+                const CircularProgressIndicator(),
+                const SizedBox(height: 12),
+                Text('Getting your location...', style: theme.textTheme.bodyMedium),
+              ] else if (!_isSending) ...[
                 Container(
                   width: 100,
                   height: 100,
@@ -146,7 +202,7 @@ class _AccidentDetectedScreenState extends State<AccidentDetectedScreen>
                   ),
                   child: Center(
                     child: Text(
-                      "$_countdown",
+                      '$_countdown',
                       style: const TextStyle(
                         fontSize: 42,
                         fontWeight: FontWeight.bold,
@@ -157,7 +213,7 @@ class _AccidentDetectedScreenState extends State<AccidentDetectedScreen>
                 ),
                 const SizedBox(height: 12),
                 Text(
-                  "seconds",
+                  'seconds',
                   style: theme.textTheme.bodyMedium?.copyWith(
                     color: Colors.grey,
                   ),
@@ -165,16 +221,13 @@ class _AccidentDetectedScreenState extends State<AccidentDetectedScreen>
               ] else ...[
                 const CircularProgressIndicator(),
                 const SizedBox(height: 12),
-                Text(
-                  "Sending alerts...",
-                  style: theme.textTheme.bodyLarge,
-                ),
+                Text('Sending alerts...', style: theme.textTheme.bodyLarge),
               ],
 
               const SizedBox(height: 32),
 
               /// Cancel Button
-              if (!_isSending)
+              if (_isInitialized && !_isSending)
                 SizedBox(
                   width: double.infinity,
                   height: 52,
@@ -198,7 +251,7 @@ class _AccidentDetectedScreenState extends State<AccidentDetectedScreen>
               const SizedBox(height: 16),
 
               /// Send Now Button
-              if (!_isSending)
+              if (_isInitialized && !_isSending)
                 SizedBox(
                   width: double.infinity,
                   height: 48,
@@ -215,7 +268,7 @@ class _AccidentDetectedScreenState extends State<AccidentDetectedScreen>
                     ),
                     icon: const Icon(Icons.send, color: Colors.red),
                     label: const Text(
-                      "Send Alert Now",
+                      'Send Alert Now',
                       style: TextStyle(color: Colors.red),
                     ),
                   ),
@@ -228,7 +281,7 @@ class _AccidentDetectedScreenState extends State<AccidentDetectedScreen>
                 onPressed: _callEmergencyServices,
                 icon: const Icon(Icons.phone, color: Colors.red),
                 label: const Text(
-                  "Call Emergency Services",
+                  'Call Emergency Services',
                   style: TextStyle(color: Colors.red),
                 ),
               ),
