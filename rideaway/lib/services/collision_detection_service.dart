@@ -1,31 +1,42 @@
 import 'dart:async';
 import 'dart:math';
 import 'package:sensors_plus/sensors_plus.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class CollisionDetectionService {
   StreamSubscription<AccelerometerEvent>? _subscription;
   final Function() onCollisionDetected;
 
-  // Customizable threshold for collision detection (in Gs)
-  // 4G is a reasonable starting point for a "hard fall" or impact
-  // Normal gravity is 1G (~9.8 m/s^2)
-  final double collisionThreshold =
-      40.0; // using raw values m/s^2? No, sensors_plus returns m/s^2. 1G = 9.8. 4G ~= 40.
-
   bool _isMonitoring = false;
   DateTime? _lastCollisionTime;
 
+  // Threshold map based on sensitivity setting (0=Low, 1=Medium, 2=High)
+  // Values are in m/s² — normal gravity ≈ 9.8 m/s²
+  static const Map<int, double> _thresholdMap = {
+    0: 55.0, // Low — only detect very hard impacts
+    1: 40.0, // Medium — balanced (default)
+    2: 25.0, // High — detect smaller impacts (more false positives)
+  };
+
+  double _collisionThreshold = 40.0;
+
   CollisionDetectionService({required this.onCollisionDetected});
 
-  void startMonitoring() {
+  /// Load sensitivity from SharedPreferences and start listening
+  Future<void> startMonitoring() async {
     if (_isMonitoring) return;
 
-    _isMonitoring = true;
-    _subscription = accelerometerEvents.listen((AccelerometerEvent event) {
-      double gForce = sqrt(pow(event.x, 2) + pow(event.y, 2) + pow(event.z, 2));
+    // Read sensitivity setting
+    final prefs = await SharedPreferences.getInstance();
+    final sensitivityIndex = (prefs.getDouble('setting_sensitivity') ?? 1).toInt();
+    _collisionThreshold = _thresholdMap[sensitivityIndex] ?? 40.0;
 
-      // Check if force exceeds threshold
-      if (gForce > collisionThreshold) {
+    _isMonitoring = true;
+    _subscription = accelerometerEventStream(
+      samplingPeriod: SensorInterval.gameInterval,
+    ).listen((AccelerometerEvent event) {
+      final gForce = sqrt(pow(event.x, 2) + pow(event.y, 2) + pow(event.z, 2));
+      if (gForce > _collisionThreshold) {
         _handlePotentialCollision();
       }
     });
@@ -33,12 +44,11 @@ class CollisionDetectionService {
 
   void _handlePotentialCollision() {
     final now = DateTime.now();
-    // Debounce collisions (e.g., prevent multiple triggers for the same event)
+    // Debounce: prevent multiple triggers within 5 seconds
     if (_lastCollisionTime != null &&
         now.difference(_lastCollisionTime!) < const Duration(seconds: 5)) {
       return;
     }
-
     _lastCollisionTime = now;
     onCollisionDetected();
   }

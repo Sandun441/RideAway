@@ -105,7 +105,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                   ),
                   const SizedBox(width: 10),
                   Text(
-                    "Smart Ride Safety",
+                    "RideAway",
                     style: theme.textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.w600,
                     ),

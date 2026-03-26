@@ -209,18 +209,39 @@ class _SettingsScreenState extends State<SettingsScreen> {
               title: "Privacy & Legal",
               icon: Icons.privacy_tip_outlined,
               child: Column(
-                children: const [
+                children: [
                   ListTile(
-                    title: Text("Privacy Policy"),
-                    trailing: Icon(Icons.chevron_right),
+                    title: const Text("Privacy Policy"),
+                    trailing: const Icon(Icons.chevron_right),
+                    onTap: () => _showInfoDialog(
+                      context,
+                      'Privacy Policy',
+                      'RideAway collects your location data and contact information solely for emergency '  
+                      'alert purposes. This data is never shared with third parties and is stored '
+                      'securely in Firebase.',
+                    ),
                   ),
                   ListTile(
-                    title: Text("Terms of Service"),
-                    trailing: Icon(Icons.chevron_right),
+                    title: const Text("Terms of Service"),
+                    trailing: const Icon(Icons.chevron_right),
+                    onTap: () => _showInfoDialog(
+                      context,
+                      'Terms of Service',
+                      'By using RideAway, you agree to use the app responsibly. The app is provided '
+                      '"as-is" and should not be relied upon as your sole safety device. Always '
+                      'follow local traffic laws.',
+                    ),
                   ),
                   ListTile(
-                    title: Text("Data Usage"),
-                    trailing: Icon(Icons.chevron_right),
+                    title: const Text("Data Usage"),
+                    trailing: const Icon(Icons.chevron_right),
+                    onTap: () => _showInfoDialog(
+                      context,
+                      'Data Usage',
+                      'RideAway stores your profile, emergency contacts, and ride history in Google '
+                      'Firebase Firestore. Sensor data (accelerometer) is processed locally on your '
+                      'device and never uploaded.',
+                    ),
                   ),
                 ],
               ),
@@ -232,7 +253,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             Column(
               children: [
                 Text(
-                  "Smart Ride Safety",
+                  "RideAway",
                   style: themeData.textTheme.titleMedium
                       ?.copyWith(fontWeight: FontWeight.bold),
                 ),
@@ -341,6 +362,22 @@ class _SettingsScreenState extends State<SettingsScreen> {
             )
             .toList(),
         onChanged: onChanged,
+      ),
+    );
+  }
+
+  void _showInfoDialog(BuildContext context, String title, String content) {
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: Text(title),
+        content: Text(content),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Close'),
+          ),
+        ],
       ),
     );
   }

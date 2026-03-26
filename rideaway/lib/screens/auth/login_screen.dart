@@ -111,7 +111,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   const SizedBox(width: 10),
                   Text(
-                    "Smart Ride Safety",
+                    "RideAway",
                     style: theme.textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.w600,
                     ),
@@ -263,13 +263,14 @@ class _LoginScreenState extends State<LoginScreen> {
 
                     const SizedBox(height: 12),
 
-                    /// Apple Button (Placeholder)
+                    /// Apple Button — Coming Soon
                     SizedBox(
                       width: double.infinity,
                       height: 48,
                       child: OutlinedButton(
-                        onPressed: () {},
+                        onPressed: null, // Not implemented yet
                         style: OutlinedButton.styleFrom(
+                          disabledForegroundColor: Colors.grey,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(10),
                           ),
@@ -279,9 +280,18 @@ class _LoginScreenState extends State<LoginScreen> {
                           children: [
                             Icon(Icons.apple,
                                 size: 24,
-                                color: isDark ? Colors.white : Colors.black),
+                                color: Colors.grey),
                             const SizedBox(width: 8),
                             const Text("Continue with Apple"),
+                            const SizedBox(width: 8),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                              decoration: BoxDecoration(
+                                color: Colors.grey.shade300,
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              child: const Text('Soon', style: TextStyle(fontSize: 10, color: Colors.grey)),
+                            ),
                           ],
                         ),
                       ),
