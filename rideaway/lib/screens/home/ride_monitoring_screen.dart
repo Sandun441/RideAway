@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../routes/app_routes.dart';
 import '../../services/collision_detection_service.dart';
-import '../../services/email_service.dart';
-import '../../services/location_service.dart';
 import '../../services/ride_service.dart';
 import '../../models/ride_model.dart';
 
@@ -70,21 +68,6 @@ class _RideMonitoringScreenState extends State<RideMonitoringScreen>
     }
   }
 
-  Future<void> _handleSimulatedAccident() async {
-    _stopMonitoring();
-
-    final locationStr = await LocationService().getCurrentLocationString();
-    final emailService = EmailService();
-    await emailService.sendEmergencyEmail(
-        location: locationStr ?? 'Location unavailable');
-
-    await _saveRide(RideStatus.incident,
-        alertNote: 'Simulated accident test sent via email.');
-
-    if (mounted) {
-      Navigator.pushReplacementNamed(context, AppRoutes.accident);
-    }
-  }
 
   Future<void> _saveRide(RideStatus status, {String? alertNote}) async {
     if (_rideStartTime == null) return;
@@ -190,25 +173,7 @@ class _RideMonitoringScreenState extends State<RideMonitoringScreen>
               ),
             ),
             const SizedBox(height: 20),
-            // Test Button for Debugging
-            TextButton(
-              onPressed: _handleCollision,
-              child: const Text('Simulate Collision (Test)'),
-            ),
-            const SizedBox(height: 10),
-            ElevatedButton.icon(
-              onPressed: _handleSimulatedAccident,
-              icon: const Icon(Icons.email),
-              label: const Text('Test: Send Simulated Email Alert'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.redAccent,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 24,
-                  vertical: 12,
-                ),
-              ),
-            ),
+
           ],
         ),
       ),

@@ -21,7 +21,8 @@ class _SplashScreenState extends State<SplashScreen> {
     await Future.delayed(const Duration(seconds: 2));
     if (!mounted) return;
 
-    final user = FirebaseAuth.instance.currentUser;
+    // Wait for the native Firebase auth state to fully initialize and return the cached session
+    final user = await FirebaseAuth.instance.authStateChanges().first;
     if (user != null && !user.isAnonymous) {
       // Already logged in — go home
       Navigator.of(context).pushReplacementNamed(AppRoutes.home);

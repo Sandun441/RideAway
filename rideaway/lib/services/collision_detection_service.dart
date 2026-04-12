@@ -1,50 +1,105 @@
 import 'dart:async';
-import 'dart:math';
 import 'package:sensors_plus/sensors_plus.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:tflite_flutter/tflite_flutter.dart';
 
 class CollisionDetectionService {
-  StreamSubscription<AccelerometerEvent>? _subscription;
+  StreamSubscription<UserAccelerometerEvent>? _accelSubscription;
+  StreamSubscription<GyroscopeEvent>? _gyroSubscription;
+  Timer? _samplingTimer;
+  Interpreter? _interpreter;
+
   final Function() onCollisionDetected;
 
   bool _isMonitoring = false;
   DateTime? _lastCollisionTime;
 
-  // Threshold map based on sensitivity setting (0=Low, 1=Medium, 2=High)
-  // Values are in m/s² — normal gravity ≈ 9.8 m/s²
-  static const Map<int, double> _thresholdMap = {
-    0: 55.0, // Low — only detect very hard impacts
-    1: 40.0, // Medium — balanced (default)
-    2: 25.0, // High — detect smaller impacts (more false positives)
-  };
+  // TFLite Variables
+  final List<List<double>> _sensorBuffer = []; // stores [ax, ay, az, gx, gy, gz]
+  final int _windowSize = 100;
+  int _consecutiveHighProbCrashes = 0;
 
-  double _collisionThreshold = 40.0;
+  // Latest sensor readings
+  double _ax = 0.0, _ay = 0.0, _az = 0.0;
+  double _gx = 0.0, _gy = 0.0, _gz = 0.0;
 
   CollisionDetectionService({required this.onCollisionDetected});
 
-  /// Load sensitivity from SharedPreferences and start listening
   Future<void> startMonitoring() async {
     if (_isMonitoring) return;
 
-    // Read sensitivity setting
-    final prefs = await SharedPreferences.getInstance();
-    final sensitivityIndex = (prefs.getDouble('setting_sensitivity') ?? 1).toInt();
-    _collisionThreshold = _thresholdMap[sensitivityIndex] ?? 40.0;
+    try {
+      _interpreter = await Interpreter.fromAsset('assets/ml/crash_detector.tflite');
+      print('Model loaded successfully');
+      if (_interpreter != null) {
+        var inputTensors = _interpreter!.getInputTensors();
+        for (var tensor in inputTensors) {
+          print('DBG_INPUT_SHAPE: name=${tensor.name}, shape=${tensor.shape}, type=${tensor.type}');
+        }
+        var outputTensors = _interpreter!.getOutputTensors();
+        for (var tensor in outputTensors) {
+          print('DBG_OUTPUT_SHAPE: name=${tensor.name}, shape=${tensor.shape}, type=${tensor.type}');
+        }
+      }
+    } catch (e) {
+      print('Failed to load model: $e');
+    }
 
     _isMonitoring = true;
-    _subscription = accelerometerEventStream(
-      samplingPeriod: SensorInterval.gameInterval,
-    ).listen((AccelerometerEvent event) {
-      final gForce = sqrt(pow(event.x, 2) + pow(event.y, 2) + pow(event.z, 2));
-      if (gForce > _collisionThreshold) {
-        _handlePotentialCollision();
+
+    _accelSubscription = userAccelerometerEventStream().listen((event) {
+      _ax = event.x;
+      _ay = event.y;
+      _az = event.z;
+    });
+
+    _gyroSubscription = gyroscopeEventStream().listen((event) {
+      _gx = event.x;
+      _gy = event.y;
+      _gz = event.z;
+    });
+
+    // Sample sensors at 50Hz (every 20ms)
+    _samplingTimer = Timer.periodic(const Duration(milliseconds: 20), (timer) {
+      // Prevent inference on dead/zeroed sensor data (common on emulators or before first sensor event).
+      // A pure (0,0,0) reading looks like free-fall to the ML model!
+      if (_ax == 0.0 && _ay == 0.0 && _az == 0.0) return;
+
+      _sensorBuffer.add([_ax, _ay, _az, _gx, _gy, _gz]);
+
+      if (_sensorBuffer.length >= _windowSize) {
+        _performInference();
+        _sensorBuffer.clear();
       }
     });
   }
 
+  void _performInference() {
+    if (_interpreter == null) return;
+
+    var input = [_sensorBuffer];
+    var output = List<List<double>>.generate(1, (_) => List<double>.filled(1, 0.0));
+
+    try {
+      _interpreter!.run(input, output);
+      double crashProbability = output[0][0];
+      print('Crash probability: $crashProbability');
+
+      if (crashProbability > 0.85) {
+        _consecutiveHighProbCrashes++;
+        if (_consecutiveHighProbCrashes >= 2) {
+          _handlePotentialCollision();
+          _consecutiveHighProbCrashes = 0; 
+        }
+      } else {
+        _consecutiveHighProbCrashes = 0;
+      }
+    } catch (e) {
+      print('Inference error: $e');
+    }
+  }
+
   void _handlePotentialCollision() {
     final now = DateTime.now();
-    // Debounce: prevent multiple triggers within 5 seconds
     if (_lastCollisionTime != null &&
         now.difference(_lastCollisionTime!) < const Duration(seconds: 5)) {
       return;
@@ -54,8 +109,16 @@ class CollisionDetectionService {
   }
 
   void stopMonitoring() {
-    _subscription?.cancel();
-    _subscription = null;
+    _accelSubscription?.cancel();
+    _accelSubscription = null;
+    _gyroSubscription?.cancel();
+    _gyroSubscription = null;
+    _samplingTimer?.cancel();
+    _samplingTimer = null;
+    _interpreter?.close();
+    _interpreter = null;
     _isMonitoring = false;
+    _sensorBuffer.clear();
+    _consecutiveHighProbCrashes = 0;
   }
 }
