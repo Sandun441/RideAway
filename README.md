@@ -109,15 +109,15 @@ RideAway/
 │   ├── services/
 │   │   └── collision_detection_service.dart   # TFLite inference pipeline
 │   └── ...
-├── ml/
-│   ├── notebooks/
-│   │   ├── 01_data_exploration.ipynb
-│   │   ├── 02_feature_engineering.ipynb
-│   │   ├── 03_baseline_random_forest.ipynb
-│   │   └── 04_cnn_training_and_evaluation.ipynb
-│   └── models/
+├── assests/
+│   ├── ml/
 │       └── crash_detector.tflite              # Quantized final model
-├── assets/
+│   ├── notebooks/
+│       │   ├── 01_data_exploration.ipynb
+│       │   ├── 02_feature_engineering.ipynb
+│       │   ├── 03_baseline_random_forest.ipynb
+│       │   └── 04_cnn_training_and_evaluation.ipynb    
+├
 └── README.md
 ```
 
