@@ -153,7 +153,7 @@ If you use this work or dataset in your research, please cite:
 
 ```
 @software{rideaway2025,
-  author = {Liyanage, Sandun and contributors},
+  author = {L.G.S.B.Liyanage, A.J.M.R.L.Jayasundara and K.R.A.R.Jayathilaka  },
   title = {RideAway: On-Device Crash Detection for Cyclists using 1D-CNN and TFLite},
   year = {2025},
   url = {https://github.com/Sandun441/RideAway}
