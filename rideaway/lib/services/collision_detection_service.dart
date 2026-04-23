@@ -1,12 +1,14 @@
 import 'dart:async';
 import 'package:sensors_plus/sensors_plus.dart';
 import 'package:tflite_flutter/tflite_flutter.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class CollisionDetectionService {
   StreamSubscription<UserAccelerometerEvent>? _accelSubscription;
   StreamSubscription<GyroscopeEvent>? _gyroSubscription;
   Timer? _samplingTimer;
   Interpreter? _interpreter;
+  SharedPreferences? _prefs;
 
   final Function() onCollisionDetected;
 
@@ -24,8 +26,26 @@ class CollisionDetectionService {
 
   CollisionDetectionService({required this.onCollisionDetected});
 
+  double _getCrashThreshold() {
+    if (_prefs == null) return 0.45; // Default medium
+    double sensitivityIndex = _prefs!.getDouble('setting_sensitivity') ?? 1.0;
+    if (sensitivityIndex == 0.0) {
+      return 0.85; // Low sensitivity
+    } else if (sensitivityIndex == 1.0) {
+      return 0.45; // Medium sensitivity
+    } else {
+      return 0.35; // High sensitivity
+    }
+  }
+
   Future<void> startMonitoring() async {
     if (_isMonitoring) return;
+
+    try {
+      _prefs = await SharedPreferences.getInstance();
+    } catch (e) {
+      print('Failed to init SharedPreferences: $e');
+    }
 
     try {
       _interpreter = await Interpreter.fromAsset('assets/ml/crash_detector.tflite');
@@ -84,7 +104,8 @@ class CollisionDetectionService {
       double crashProbability = output[0][0];
       print('Crash probability: $crashProbability');
 
-      if (crashProbability > 0.85) {
+      double threshold = _getCrashThreshold();
+      if (crashProbability > threshold) {
         _consecutiveHighProbCrashes++;
         if (_consecutiveHighProbCrashes >= 2) {
           _handlePotentialCollision();
