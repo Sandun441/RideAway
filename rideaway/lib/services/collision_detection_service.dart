@@ -229,7 +229,9 @@ class CollisionDetectionService {
       // Single below-threshold window resets the counter (conservative but safe).
       // If you want less sensitivity to brief dips, you can use a decay instead:
       //   _consecutiveHighProb = max(0, _consecutiveHighProb - 1);
-      _consecutiveHighProb = 0;
+      _consecutiveHighProb = (_consecutiveHighProb > 0)
+    ? _consecutiveHighProb - 1
+    : 0;
     }
   }
 
