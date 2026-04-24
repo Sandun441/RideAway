@@ -16,7 +16,8 @@ class CollisionDetectionService {
   DateTime? _lastCollisionTime;
 
   // TFLite Variables
-  final List<List<double>> _sensorBuffer = []; // stores [ax, ay, az, gx, gy, gz]
+  final List<List<double>> _sensorBuffer =
+      []; // stores [ax, ay, az, gx, gy, gz]
   final int _windowSize = 100;
   int _consecutiveHighProbCrashes = 0;
 
@@ -34,7 +35,7 @@ class CollisionDetectionService {
     } else if (sensitivityIndex == 1.0) {
       return 0.45; // Medium sensitivity
     } else {
-      return 0.35; // High sensitivity
+      return 0.05; // High sensitivity
     }
   }
 
@@ -48,16 +49,22 @@ class CollisionDetectionService {
     }
 
     try {
-      _interpreter = await Interpreter.fromAsset('assets/ml/crash_detector.tflite');
+      _interpreter = await Interpreter.fromAsset(
+        'assets/ml/crash_detector.tflite',
+      );
       print('Model loaded successfully');
       if (_interpreter != null) {
         var inputTensors = _interpreter!.getInputTensors();
         for (var tensor in inputTensors) {
-          print('DBG_INPUT_SHAPE: name=${tensor.name}, shape=${tensor.shape}, type=${tensor.type}');
+          print(
+            'DBG_INPUT_SHAPE: name=${tensor.name}, shape=${tensor.shape}, type=${tensor.type}',
+          );
         }
         var outputTensors = _interpreter!.getOutputTensors();
         for (var tensor in outputTensors) {
-          print('DBG_OUTPUT_SHAPE: name=${tensor.name}, shape=${tensor.shape}, type=${tensor.type}');
+          print(
+            'DBG_OUTPUT_SHAPE: name=${tensor.name}, shape=${tensor.shape}, type=${tensor.type}',
+          );
         }
       }
     } catch (e) {
@@ -97,7 +104,10 @@ class CollisionDetectionService {
     if (_interpreter == null) return;
 
     var input = [_sensorBuffer];
-    var output = List<List<double>>.generate(1, (_) => List<double>.filled(1, 0.0));
+    var output = List<List<double>>.generate(
+      1,
+      (_) => List<double>.filled(1, 0.0),
+    );
 
     try {
       _interpreter!.run(input, output);
@@ -109,7 +119,7 @@ class CollisionDetectionService {
         _consecutiveHighProbCrashes++;
         if (_consecutiveHighProbCrashes >= 2) {
           _handlePotentialCollision();
-          _consecutiveHighProbCrashes = 0; 
+          _consecutiveHighProbCrashes = 0;
         }
       } else {
         _consecutiveHighProbCrashes = 0;
