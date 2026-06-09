@@ -1,4 +1,4 @@
-# RideAway — On-Device Crash Detection for Cyclists & Scooter Riders
+# RideAway — On-Device Crash Detection for Cyclists using 1D-CNN and TFLite
 
 > Real-time crash detection on a smartphone. No internet. No server. Under 50 ms.
 
